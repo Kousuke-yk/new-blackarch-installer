@@ -1801,6 +1801,17 @@ os-release,sysctl.d,systemd} "$CHROOT/etc/." > $VERBOSE 2>&1
   return $SUCCESS
 }
 
+# setting up fcitx5
+setup_im()
+{
+  title 'BlackArch Linux Setup > Input Methot Setup'
+  wprintf '[+] Adding fcitx5 to environment variables...'
+  chroot $CHROOT sed -i '5a GTK_IM_MODULE=fcitx5' "/etc/environment"
+  chroot $CHROOT sed -i '6a QT_IM_MODULE=fcitx5' "/etc/environment"
+  chroot $CHROOT sed -i '7a XMODIFIERS=@im=fcitx5' "/etc/environment"
+
+  retrrn $SUCCESS
+}
 
 # ask for blackarch linux mirror
 ask_mirror()
@@ -2399,6 +2410,9 @@ dump_full_iso()
 setup_blackarch()
 {
   update_etc
+  sleep_clear 1
+
+  setup_im
   sleep_clear 1
 
   enable_iwd_networkd
