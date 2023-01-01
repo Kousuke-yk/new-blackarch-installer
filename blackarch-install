@@ -396,7 +396,6 @@ set_locale()
   1. English
   2. Japanese
   \n"
-  printf "\n"
   wprintf '[?] Set Language [1]: '
   read -r LANG
 
@@ -434,7 +433,6 @@ set_keymap()
   1. English
   2. Japanase
   \n"
-  printf "\n"
   wprintf '[?] Set keymap [2]: '
   read -r KEYMP
 
@@ -1842,13 +1840,10 @@ change_mirror_arch()
 {
   title 'Pacman Setup > Mirrorlist'
   wprintf '[+] Changing mirrorlist'
-  printf "=> Removing old mirrorlist"
   rm "/etc/pacman.d/mirrorlist"
   rm "/etc/pacman.d/blackarch-mirrorlist"
-  printf "=> Writing mirrorlist"
-  echo "Server = $AR_REPO_URL" > /etc/pacman.d/mirrorlist
-  echo "Server = $BA_REPO_URL" > /etc/pacman.d/blackarch-mirrorlist
-  printf "Done"
+  echo "Server = $AR_REPO_URL" >> /etc/pacman.d/mirrorlist
+  echo "Server = $BA_REPO_URL" >> /etc/pacman.d/blackarch-mirrorlist
   sleep 2
 
   return $SUCCESS
@@ -2593,12 +2588,13 @@ main()
     check_inet_conn
     sleep_clear 1
 
-    #Truble Fixing
+    # truble fixing
     update_keyring
     sleep_clear 1
+
     # self updater
-    self_updater
-    sleep_clear 1
+    # self_updater (DISABLED)
+    # sleep_clear 1
 
     # change arch mirror
     change_mirror_arch
