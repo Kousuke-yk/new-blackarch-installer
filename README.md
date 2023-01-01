@@ -24,3 +24,8 @@ It is a multifunctional version that not only fixes bugs in the existing BlackAr
 - Reflector does not work
 > This is due to an older version of Python built into BlackArch's Live ISO as of September 2021. The solution is to update Python, but this is difficult to resolve due to C library related errors that occur when updating.
 Therefore, users will need to manually change the mirror server if necessary.
+
+
+#### Example of use
+> Using KDE Plasma
+![Screenshot_20230101_095927](https://user-images.githubusercontent.com/119842878/210158486-34300379-c85e-4a1b-9c66-73acd8e44c54.png)
