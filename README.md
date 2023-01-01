@@ -31,11 +31,35 @@ It is a multifunctional version that not only fixes bugs in the existing BlackAr
 - 標準ユーザーの作成をスキップすることはできなくなりました。
 > これは、rootユーザーだと表示されないファイルや、動作しないアプリケーションがあるためです。
 
+####　追加された機能
+- デスクトップ環境をインストールする機能を追加しました。
+> BlackArchは本来、ウィンドウマネージャを使用するため標準ではデスクトップ環境は使用されません。
+しかし、デスクトップ環境をインストールすることでより美しいLinuxに仕上げることができます。
+注: デスクトップ環境をインストールしてもウィンドウマネージャのみの環境は維持されます。
+注: オリジナルのLXDM+ウィンドウマネージャのみの環境をインストールすることも引き続き可能です。
+
+- 日本語入力(fcitx5-mozc)をインストールする機能を追加
+> インストール後にenironmentを変更して再起動する面倒な手順をスキップします。
+
 #### Currently Confirmed Issues
 - Reflector does not work
 > This is due to an older version of Python built into BlackArch's Live ISO as of September 2021. The solution is to update Python, but this is difficult to resolve due to C library related errors that occur when updating.
 Therefore, users will need to manually change the mirror server if necessary.
 
+### 開始方法
+- BlackArch NetInstall ISOを使用している場合
+1. `dhcpcd`などでネットワークに接続する
+2. 下のコマンドを上から順番に実行する
+```
+~# git clone "https://github.com/Kousuke-yk/new-blackarch-installer.git"
+~# cd ./new-blackarch-installer
+~# cp ./blackarch-install /bin
+```
+
+3. `blackarch-install`を実行してインストールを開始する。
+```
+~# blackarch-install
+```
 
 #### Example of use
 > Using KDE Plasma
