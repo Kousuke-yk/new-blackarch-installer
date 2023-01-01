@@ -20,6 +20,17 @@ It is a multifunctional version that not only fixes bugs in the existing BlackAr
 - Fixed problem with passwd error.
 > This is a bug that has been widely known for some time and will be fixed in batches without prior user action.
 
+#### 削除された機能
+- いくつかの質問のステップは無駄なので削除し、新たなUIに差し替えられました。
+> ロケールとキーマップの設定において、リストを表示するか質問するのではなく、
+入力画面に直接、わかりやすく表示するようにしました。
+
+- メッセージの出力を変更するオプションは削除され、標準でメッセージが表示されるように変更しました。
+> Quietモードだとエラーメッセージが表示されず、トラブルを解決できなくなると考えたことからこのオプションは廃止され、メッセージ出力はVERBOSEモードに固定されました。
+
+- 標準ユーザーの作成をスキップすることはできなくなりました。
+> これは、rootユーザーだと表示されないファイルや、動作しないアプリケーションがあるためです。
+
 #### Currently Confirmed Issues
 - Reflector does not work
 > This is due to an older version of Python built into BlackArch's Live ISO as of September 2021. The solution is to update Python, but this is difficult to resolve due to C library related errors that occur when updating.
