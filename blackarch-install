@@ -5,12 +5,13 @@
 #                                                                              #
 # AUTHOR                                                                       #
 # noptrix@nullsecurity.net                                                     #
+# kousuke - k66561314@gmail.com                                                #
 #                                                                              #
 ################################################################################
 
 
 # blackarch-installer version
-VERSION='1.2.22'
+VERSION='2.0'
 
 # path to blackarch-installer
 BI_PATH='/usr/share/blackarch-installer'
@@ -23,8 +24,7 @@ FALSE=1
 SUCCESS=0
 FAILURE=1
 
-# enable / disable signature check
-RESTORESIGN='FALSE'
+# signature check
 SIGNCK='/mnt/etc/pacman.conf'
 
 # verbose mode - default: verbose
@@ -435,7 +435,7 @@ set_keymap()
   2. Japanase
   \n"
   printf "\n"
-  wprintf '[?] Set keymap [us]: '
+  wprintf '[?] Set keymap [2]: '
   read -r KEYMP
 
   if [ "$KEYMP" = "1" ]
@@ -452,9 +452,9 @@ set_keymap()
   if [ -z "$KEYMP" ]
   then
     echo
-    warn 'Setting default keymap: English'
+    warn 'Setting default keymap: Japanese'
     sleep 1
-    KEYMAP='us'
+    KEYMAP='jp106'
   fi
   localectl set-keymap --no-convert "$KEYMAP"
   loadkeys "$KEYMAP" > $VERBOSE 2>&1
@@ -782,7 +782,7 @@ check_inet_conn()
 # live environment keyring is update
 update_keyring()
 {
-	title 'Setting up pacman'
+	title 'Pacman Setup > Initialize keyring'
 	wprintf '[+] Initializing keyring'
 	printf "\n\n"
 	pacman -Syy archlinux-keyring blackarch-keyring --noconfirm
@@ -1283,6 +1283,7 @@ install_base_packages()
 
   pacstrap $CHROOT base base-devel btrfs-progs linux linux-firmware \
     terminus-font terminus-font-ttf > $VERBOSE 2>&1
+  wprintf '[+] Updating target pacman database...'
   chroot $CHROOT pacman -Syy --noconfirm --overwrite='*' > $VERBOSE 2>&1
 
   return $SUCCESS
@@ -1535,31 +1536,12 @@ EOF
 # ask for normal user account to setup
 ask_user_account()
 {
-  if confirm 'Base System Setup > User' '[?] Setup a normal user account [y/n]: '
-  then
-    wprintf '[?] User name: '
-    read -r NORMAL_USER
-  fi
+  title 'Base System Setup > User'
+  wprintf '[?] User name: '
+  read -r NORMAL_USER
 
   return $SUCCESS
 }
-
-
-# setup blackarch test user (not active + lxdm issue)
-setup_testuser()
-{
-  title 'Base System Setup > Test User'
-
-  wprintf '[+] Setting up test user blackarchtest account'
-  printf "\n\n"
-  warn 'Remove this user after you added a normal system user account'
-  printf "\n"
-
-  chroot $CHROOT groupadd blackarchtest > $VERBOSE 2>&1
-  chroot $CHROOT useradd -g blackarchtest -d /home/blackarchtest/ \
-    -s /sbin/nologin -m blackarchtest > $VERBOSE 2>&1
-}
-
 
 # setup user account, password and environment
 setup_user()
@@ -1632,7 +1614,7 @@ setup_extra_packages()
 
   browser='chromium elinks firefox'
 
-  editor='hexedit nano vim'
+  editor='hexedit nano vim pinta'
 
   filesystem='cifs-utils dmraid dosfstools exfat-utils f2fs-tools
   gpart gptfdisk mtools nilfs-utils ntfs-3g partclone parted partimage'
@@ -1654,7 +1636,7 @@ setup_extra_packages()
   linux-atm lsof mercurial mesa mlocate moreutils mpv p7zip rsync
   rtorrent screen scrot smartmontools strace tmux udisks2 unace unrar
   unzip upower usb_modeswitch usbutils zip zsh fcitx5-im fcitx5-mozc
-  python ruby php dkms make cmake automake autoconf'
+  python ruby php dkms make cmake automake autoconf python-pip yay'
 
   network='atftp bind-tools bridge-utils curl darkhttpd dhclient dhcpcd dialog
   dnscrypt-proxy dnsmasq dnsutils fwbuilder gnu-netcat iw
@@ -1746,19 +1728,14 @@ setup_base_system()
   ask_user_account
   sleep_clear 1
 
-  if [ -n "$NORMAL_USER" ]
-  then
-    setup_user "$NORMAL_USER"
-    sleep_clear 1
-  else
-    setup_testuser
-    sleep_clear 2
-  fi
+  setup_user "$NORMAL_USER"
+  sleep_clear 1
 
   if [ "$INSTALL_MODE" != "$INSTALL_FULL_ISO" ]
   then
     reinitialize_keyring
     sleep_clear 1
+    RESTORESIGN='FALSE'
     disable_sign_check
     sleep_clear 1
     setup_extra_packages
@@ -1806,6 +1783,7 @@ setup_im()
 {
   title 'BlackArch Linux Setup > Input Methot Setup'
   wprintf '[+] Adding fcitx5 to environment variables...'
+  cp "/etc/environment" "/mnt/etc"
   chroot $CHROOT sed -i '5a GTK_IM_MODULE=fcitx5' "/etc/environment"
   chroot $CHROOT sed -i '6a QT_IM_MODULE=fcitx5' "/etc/environment"
   chroot $CHROOT sed -i '7a XMODIFIERS=@im=fcitx5' "/etc/environment"
@@ -1860,34 +1838,20 @@ ask_mirror()
 }
 
 # ask for archlinux server
-ask_mirror_arch()
+change_mirror_arch()
 {
-  local mirrold='cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.backup'
+  title 'Pacman Setup > Mirrorlist'
+  wprintf '[+] Changing mirrorlist'
+  printf "=> Removing old mirrorlist"
+  rm "/etc/pacman.d/mirrorlist"
+  rm "/etc/pacman.d/blackarch-mirrorlist"
+  printf "=> Writing mirrorlist"
+  echo "Server = $AR_REPO_URL" > /etc/pacman.d/mirrorlist
+  echo "Server = $BA_REPO_URL" > /etc/pacman.d/blackarch-mirrorlist
+  printf "Done"
+  sleep 2
 
-  if confirm 'Pacman Setup > ArchLinux Mirrorlist' \
-    "[+] Worldwide mirror will be used\n\n[?] Look for the best server [y/n]: "
-  then
-    printf "\n"
-    warn 'This may take time depending on your connection'
-    printf "\n"
-    $mirrold
-    pacman -Sy --noconfirm > $VERBOSE 2>&1
-    pacman -S --needed --noconfirm reflector > $VERBOSE 2>&1
-    yes | pacman -Scc > $VERBOSE 2>&1
-    reflector --verbose --latest 5 --protocol https --sort rate \
-      --save /etc/pacman.d/mirrorlist > $VERBOSE 2>&1
-  else
-    printf "\n"
-    warn 'Using Worldwide mirror server'
-    $mirrold
-    echo -e "## Arch Linux repository Worldwide mirrorlist\n\n" \
-      > /etc/pacman.d/mirrorlist
-
-    for wore in $AR_REPO_URL
-    do
-      echo "Server = $wore" >> /etc/pacman.d/mirrorlist
-    done
-  fi
+  return $SUCCESS
 
 }
 
@@ -1944,20 +1908,18 @@ disable_sign_check()
 	title 'Pacman Settings > Signature Check'
 	wprintf '[+] Setting up signature check'
 	printf "\n\n"
+
 	if [ "$RESTORESIGN" = "FALSE" ]
 	then
-	sed -i '41d' "$SIGNCK"
-	sed -i '42d' "$SIGNCK"
-	sed -i '40a SigLevel = Never' "$SIGNCK"
+	sed -i "s/^SigLevel = Required DetabaseOptional/SigLevel = Never/" "$SIGNCK"
+  sed -i "s/^LocaleFileSigLevel = Optional/#LocalFileSigLevel = Optional/" "$SIGNCK"
 	fi
 
 	if [ "$RESTORESIGN" = "TRUE" ]
 	then
 		printf "Restore default settings"
-		sed -i '41d' "$SIGNCK"
-		sed -i '42d' "$SIGNCK"
-		sed -i '40a SigLevel = Required DatabaseOptional' "$SIGNCK"
-		sed -i '41a LocalFileSigLevel = Optional' "$SIGNCK"
+	sed -i "s/^SigLevel = Never/SigLevel = Required DatabaseOptional/" "$SIGNCK"
+  sed -i "s/^#LocalFileSigLevel = Optional/LocalFileSigLevel = Optional/" "$SIGNCK"
 	fi
 
 	return $SUCCESS
@@ -1974,6 +1936,7 @@ ask_de_setup()
 		printf "\n"
 		printf "Burn! Set your soul on fire and unlock the future\n"
 		sleep 2
+    printf "\n"
 		printf "It is time to live life to the fullest"
 		sleep 3
 	fi
@@ -2014,21 +1977,21 @@ select_de()
 	if [ "$DE" = "1" ]
 	then
 		DE_MAIN='plasma'
-		DE_EXTPKG='konsole kdeconnect audiocd-kio k3b'
+		DE_EXTPKG='konsole kdeconnect audiocd-kio k3b spectacle'
 		DE_MAN='sddm'
 	fi
 
 	if [ "$DE" = "2" ]
 	then
 		DE_MAIN='gnome'
-		DE_EXTPKG='gnome-extra'
+		DE_EXTPKG='gnome-extra gnome-screenshot'
 		DE_MAN='gdm'
 	fi
 
 	if [ "$DE" = "3" ]
 	then
 		DE_MAIN='lxde'
-		DE_EXTPKG='xterm'
+		DE_EXTPKG='xterm spectacle'
 		DE_MAN='lxdm'
 	fi
 
@@ -2046,7 +2009,8 @@ install_de()
 	printf "\n\n"
 
 	chroot $CHROOT pacman -S $DE_MAIN $DE_EXTPKG $DE_MAN --disable-download-timeout --noconfirm
-	wprintf '[+] Enabling Display Manager'
+
+  wprintf '[+] Enabling Display Manager'
 	chroot $CHROOT systemctl enable $DE_MAN
 	sleep 1
 	printf "\n\n"
@@ -2522,10 +2486,10 @@ easter_backdoor()
   return $SUCCESS
 }
 
-# reupdate blackarch-keyring
+# reinitialization blackarch-keyring
 reupdate_keyring()
 {
-	title 'Setting up pacman'
+	title 'Pacman Setup > Keyring reinitialization'
 	wprintf '[+] Reinitializing keyrings'
 	chroot $CHROOT pacman -Syy archlinux-keyring blackarch-keyring --noconfirm
 
@@ -2629,16 +2593,18 @@ main()
     check_inet_conn
     sleep_clear 1
 
-    # self updater
+    #Truble Fixing
     update_keyring
     sleep_clear 1
+    # self updater
     self_updater
     sleep_clear 1
 
-    # pacman
-    ask_mirror_arch
+    # change arch mirror
+    change_mirror_arch
     sleep_clear 1
     update_pacman
+
   fi
 
   # hard drive
