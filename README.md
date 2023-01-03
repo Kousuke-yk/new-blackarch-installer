@@ -1,24 +1,24 @@
-### Overview
-New BlackArch Linux Installer is a fork of BlackArch-Installer.
-It is a multifunctional version that not only fixes bugs in the existing BlackArch-Installer, but also adds new options such as installing desktop environments and setting input methods.
+### 概要
+New BlackArch Linux Installerは、[BlackArch Installer](https://github.com/BlackArch/blackarch-installer)の非公式フォークです。
+これには、オリジナル版のバグ修正やデスクトップ環境を追加する新たな機能があります。
 
-### New Features
-1. Fixed a bug that caused problems in the previous version.
-2. A new option to install a desktop environment has been added. This allows users to make BlackArchLinux a more beautiful operating system.
-3. Several useful features have been added.
-4. Some UI changes have been made.
+### 新しい機能
+1. オリジナル版の致命的なバグを修正、または対策しました。
+2. デスクトップ環境を追加する新たなオプションを追加しました。これによりユーザーはBlackArchをより一層美しいOSに仕上げることができます。
+3. その他に便利な機能がいくつか追加されました。
+4. 一部のUIが変更されました。
 
-### Changed details
+### 変更の詳細
 
-#### Bugs fixed from the original version
-- Fixed problem with Extra Package not working.
-> Removed invalid packages not present in the database and added new useful packages such as pulseaudio, k3b, noto-fonts-cjk, etc.
+#### オリジナル版から修正したバグ
+- Extra packagesが機能しない問題を修正
+> 無効なパッケージを削除し、新たに便利なパッケージを大量に追加しました。
 
-- Fixed a problem in which all BlackArch tools were not installed due to a signature check error.
-> This is handled by having the keyring updated in advance and temporarily disabling the signature check in pacman's configuration file.
+- BlackArch Linux Toolsがインストールされない問題を修正
+> キーリングの問題でツールがインストールされない問題を修正しました。
 
-- Fixed problem with passwd error.
-> This is a bug that has been widely known for some time and will be fixed in batches without prior user action.
+- 大量のpasswdエラーに見舞われる問題を修正
+> これは以前から広く知られているバグですが、インストーラー内に自動修正する機能を追加したのでユーザーが事前にキーリングを更新する必要はありません。
 
 #### 削除された機能
 - いくつかの質問のステップは無駄なので削除し、新たなUIに差し替えられました。
@@ -41,10 +41,10 @@ It is a multifunctional version that not only fixes bugs in the existing BlackAr
 - 日本語入力(fcitx5-mozc)をインストールする機能を追加
 > インストール後にenironmentを変更して再起動する面倒な手順をスキップします。
 
-#### Currently Confirmed Issues
-- Reflector does not work
-> This is due to an older version of Python built into BlackArch's Live ISO as of September 2021. The solution is to update Python, but this is difficult to resolve due to C library related errors that occur when updating.
-Therefore, users will need to manually change the mirror server if necessary.
+#### 修正できない問題
+- Reflectorが動作しない
+> これは、スクリプトの問題ではなくLive ISOに内蔵されているPythonのバージョンが古いことが原因です。
+解決するには、LiveISOをPythonが最新になるようにビルドする必要があります。
 
 ### 開始方法
 - BlackArch NetInstall ISOを使用している場合
@@ -61,8 +61,8 @@ Therefore, users will need to manually change the mirror server if necessary.
 ~# blackarch-install
 ```
 
-#### Example of use
-> Using KDE Plasma
+#### インストール後の使用例
+> KDE Plasmaを使用中
 ![Screenshot_20230101_095927](https://user-images.githubusercontent.com/119842878/210158486-34300379-c85e-4a1b-9c66-73acd8e44c54.png)
 
 > [Movies URL](https://youtu.be/_nIWi3kOkgU)
