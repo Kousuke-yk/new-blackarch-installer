@@ -59,7 +59,7 @@ New BlackArch Linux Installerは、[BlackArch Installer](https://github.com/Blac
 3. `blackarch-install`を実行してインストールを開始する。
 ```
 ~# blackarch-install
-``
+```
 
 #### 外部ストレージを使用する方法
 1. 事前に`blackarch-install`をHDDなどにコピーする
