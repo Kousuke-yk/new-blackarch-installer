@@ -5,13 +5,13 @@
 #                                                                              #
 # AUTHOR                                                                       #
 # noptrix@nullsecurity.net                                                     #
-# kousuke - k66561314@gmail.com                                                #
+# kousuke                                                                      #
 #                                                                              #
 ################################################################################
 
 
 # blackarch-installer version
-VERSION='2.0'
+VERSION='2.1'
 
 # path to blackarch-installer
 BI_PATH='/usr/share/blackarch-installer'
@@ -25,7 +25,7 @@ SUCCESS=0
 FAILURE=1
 
 # signature check
-SIGNCK='/mnt/etc/pacman.conf'
+RESTORESIGN='FALSE'
 
 # verbose mode - default: verbose
 VERBOSE='/dev/stdout'
@@ -153,7 +153,7 @@ NORMAL_USER=''
 BA_REPO_URL='https://blackarch.cs.nctu.edu.tw/$repo/os/$arch'
 
 # default ArchLinux repository URL (JAPAN)
-AR_REPO_URL='https://mirror.saebasol.org/archlinux/$repo/os/$arch'
+AR_REPO_URL='https://mirrors.cat.net/archlinux/$repo/os/$arch'
 
 # X (display + window managers ) setup - default: false
 X_SETUP=$FALSE
@@ -431,7 +431,7 @@ set_keymap()
   printf "\n"
   printf "
   1. English
-  2. Japanase
+  2. Japanese
   \n"
   wprintf '[?] Set keymap [2]: '
   read -r KEYMP
@@ -781,6 +781,10 @@ check_inet_conn()
 update_keyring()
 {
 	title 'Pacman Setup > Initialize keyring'
+	wprintf '[+] Changing mirrorlist'
+	echo -e "Server = $AR_REPO_URL" > /etc/pacman.d/mirrorlist
+	echo -e "Server = $BA_REPO_URL" > /etc/pacman.d/blackarch-mirrorlist
+	printf "\n\n"
 	wprintf '[+] Initializing keyring'
 	printf "\n\n"
 	pacman -Syy archlinux-keyring blackarch-keyring --noconfirm
@@ -1281,7 +1285,9 @@ install_base_packages()
 
   pacstrap $CHROOT base base-devel btrfs-progs linux linux-firmware \
     terminus-font terminus-font-ttf > $VERBOSE 2>&1
+  printf "\n"
   wprintf '[+] Updating target pacman database...'
+  printf "\n"
   chroot $CHROOT pacman -Syy --noconfirm --overwrite='*' > $VERBOSE 2>&1
 
   return $SUCCESS
@@ -1634,7 +1640,7 @@ setup_extra_packages()
   linux-atm lsof mercurial mesa mlocate moreutils mpv p7zip rsync
   rtorrent screen scrot smartmontools strace tmux udisks2 unace unrar
   unzip upower usb_modeswitch usbutils zip zsh fcitx5-im fcitx5-mozc
-  python ruby php dkms make cmake automake autoconf python-pip yay'
+  python ruby php dkms make cmake automake autoconf python-pip'
 
   network='atftp bind-tools bridge-utils curl darkhttpd dhclient dhcpcd dialog
   dnscrypt-proxy dnsmasq dnsutils fwbuilder gnu-netcat iw
@@ -1733,8 +1739,7 @@ setup_base_system()
   then
     reinitialize_keyring
     sleep_clear 1
-    RESTORESIGN='FALSE'
-    disable_sign_check
+    disable_sign_check2
     sleep_clear 1
     setup_extra_packages
     sleep_clear 1
@@ -1771,7 +1776,7 @@ update_etc()
 
   # /etc/*
   cp -r "$BI_PATH/data/etc/"{arch-release,issue,motd,\
-os-release,sysctl.d,systemd} "$CHROOT/etc/." > $VERBOSE 2>&1
+  os-release,sysctl.d,systemd} "$CHROOT/etc/." > $VERBOSE 2>&1
 
   return $SUCCESS
 }
@@ -1785,8 +1790,11 @@ setup_im()
   chroot $CHROOT sed -i '5a GTK_IM_MODULE=fcitx5' "/etc/environment"
   chroot $CHROOT sed -i '6a QT_IM_MODULE=fcitx5' "/etc/environment"
   chroot $CHROOT sed -i '7a XMODIFIERS=@im=fcitx5' "/etc/environment"
+  printf "\n"
 
-  retrrn $SUCCESS
+  sleep 1
+
+  return $SUCCESS
 }
 
 # ask for blackarch linux mirror
@@ -1836,17 +1844,33 @@ ask_mirror()
 }
 
 # ask for archlinux server
-change_mirror_arch()
+ask_mirror_arch()
 {
-  title 'Pacman Setup > Mirrorlist'
-  wprintf '[+] Changing mirrorlist'
-  rm "/etc/pacman.d/mirrorlist"
-  rm "/etc/pacman.d/blackarch-mirrorlist"
-  echo "Server = $AR_REPO_URL" >> /etc/pacman.d/mirrorlist
-  echo "Server = $BA_REPO_URL" >> /etc/pacman.d/blackarch-mirrorlist
-  sleep 2
+  local mirrold='cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.backup'
+  if confirm 'Pacman Setup > ArchLinux Mirrorlist' \
+    "[+] Worldwide mirror will be used\n\n[?] Look for the best server [y/n]: "
+  then
+    printf "\n"
+    warn 'This may take time depending on your connection'
+    printf "\n"
+    $mirrold
+    pacman -Sy --noconfirm > $VERBOSE 2>&1
+    pacman -S --needed --noconfirm reflector > $VERBOSE 2>&1
+    yes | pacman -Scc > $VERBOSE 2>&1
+    reflector --verbose --latest 5 --protocol https --sort rate \
+      --save /etc/pacman.d/mirrorlist > $VERBOSE 2>&1
+  else
+    printf "\n"
+    warn 'Using Worldwide mirror server'
+    $mirrold
+    echo -e "## Arch Linux repository Worldwide mirrorlist\n\n" \
+      > /etc/pacman.d/mirrorlist
 
-  return $SUCCESS
+    for wore in $AR_REPO_URL
+    do
+      echo "Server = $wore" >> /etc/pacman.d/mirrorlist
+    done
+  fi
 
 }
 
@@ -1897,8 +1921,21 @@ run_strap_sh()
   return $SUCCESS
 }
 
+# disable pacman signature check for live environment
+disable_sign_check1()
+{
+	title 'Pacman Settings > Signature Check (Live environment)'
+	wprintf '[+] Disabling signature check'
+	printf "\n\n"
+	      sed -i "s/Required DatabaseOptional/Never/" "/etc/pacman.conf"
+        sed -i "s/LocalFileSigLevel/#LocalFileSigLevel/" "/etc/pacman.conf"
+
+  return $SUCCESS
+
+}
+
 # temporarily disable pacman signature check
-disable_sign_check()
+disable_sign_check2()
 {
 	title 'Pacman Settings > Signature Check'
 	wprintf '[+] Setting up signature check'
@@ -1906,15 +1943,16 @@ disable_sign_check()
 
 	if [ "$RESTORESIGN" = "FALSE" ]
 	then
-	sed -i "s/^SigLevel = Required DetabaseOptional/SigLevel = Never/" "$SIGNCK"
-  sed -i "s/^LocaleFileSigLevel = Optional/#LocalFileSigLevel = Optional/" "$SIGNCK"
+  printf "Disabling signature check"
+	      sed -i "s/Required DatabaseOptional/Never/" "/mnt/etc/pacman.conf"
+        sed -i "s/LocalFileSigLevel/#LocalFileSigLevel/" "/mnt/etc/pacman.conf"
 	fi
 
 	if [ "$RESTORESIGN" = "TRUE" ]
 	then
-		printf "Restore default settings"
-	sed -i "s/^SigLevel = Never/SigLevel = Required DatabaseOptional/" "$SIGNCK"
-  sed -i "s/^#LocalFileSigLevel = Optional/LocalFileSigLevel = Optional/" "$SIGNCK"
+		printf "Restoring default settings"
+	      sed -i "s/Never/Required DatabaseOptional/" "/mnt/etc/pacman.conf"
+        sed -i "s/#LocalFileSigLevel/LocalFileSigLevel/" "/mnt/etc/pacman.conf"
 	fi
 
 	return $SUCCESS
@@ -2005,11 +2043,13 @@ install_de()
 
 	chroot $CHROOT pacman -S $DE_MAIN $DE_EXTPKG $DE_MAN --disable-download-timeout --noconfirm
 
-  wprintf '[+] Enabling Display Manager'
+	printf "\n"
+        wprintf '[+] Enabling Display Manager'
+        prinrf "\n"
 	chroot $CHROOT systemctl enable $DE_MAN
 	sleep 1
 	printf "\n\n"
-	printf ">>>> BE THE SHINING STAR!! <<<<"
+	printf ">>> BE THE SHINING STAR!! <<<"
 	sleep 3
 
 	return $SUCCESS
@@ -2308,7 +2348,9 @@ update_user_groups()
   fi
 
   # sudoers
-  echo "$user ALL=(ALL) ALL" >> $CHROOT/etc/sudoers > $VERBOSE 2>&1
+  echo "$user ALL=(ALL:ALL) ALL" >> $CHROOT/etc/sudoers > $VERBOSE 2>&1
+  echo "root ALL=(ALL:ALL) ALL" >> $CHROOT/etc/sudoers
+
 
   return $SUCCESS
 }
@@ -2411,6 +2453,7 @@ setup_blackarch()
     setup_window_managers
     sleep_clear 1
   fi
+  
   reupdate_keyring
   sleep_clear 1
   ask_vbox_setup
@@ -2486,6 +2529,7 @@ reupdate_keyring()
 {
 	title 'Pacman Setup > Keyring reinitialization'
 	wprintf '[+] Reinitializing keyrings'
+	printf "\n\n"
 	chroot $CHROOT pacman -Syy archlinux-keyring blackarch-keyring --noconfirm
 
 	return $SUCCESS
@@ -2505,8 +2549,21 @@ sync_disk()
   return $SUCCESS
 }
 
+# run update-initramfs
+run_update_initramfs()
+{
+	title 'Game Over'
 
-# check if new version available. perform self-update and exit
+	wprintf '[+] Running Update-InitramFS'
+	printf "\n\n"
+	chroot $CHROOT mkinitcpio -P
+
+	return $SUCCESS
+
+}
+
+
+# check if new version available. perform self-update and exit (DISABLED)
 self_updater()
 {
   title 'Self Updater'
@@ -2589,15 +2646,16 @@ main()
     sleep_clear 1
 
     # truble fixing
+    disable_sign_check1
+    sleep_clear 1
     update_keyring
     sleep_clear 1
 
-    # self updater
     # self_updater (DISABLED)
     # sleep_clear 1
 
-    # change arch mirror
-    change_mirror_arch
+    # pacman
+    ask_mirror_arch
     sleep_clear 1
     update_pacman
 
@@ -2638,7 +2696,9 @@ main()
 
   # epilog
   RESTORESIGN='TRUE'
-  disable_sign_check
+  disable_sign_check2
+  sleep_clear 1
+  run_update_initramfs
   sleep_clear 1
   umount_filesystems
   sleep_clear 1
