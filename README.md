@@ -47,7 +47,7 @@ New BlackArch Linux Installerは、[BlackArch Installer](https://github.com/Blac
 解決するには、LiveISOをPythonが最新になるようにビルドする必要があります。
 
 ### 開始方法
-- BlackArch NetInstall ISOを使用している場合
+#### 一般的な方法
 1. `dhcpcd`などでネットワークに接続する
 2. 下のコマンドを上から順番に実行する
 ```
@@ -57,6 +57,21 @@ New BlackArch Linux Installerは、[BlackArch Installer](https://github.com/Blac
 ```
 
 3. `blackarch-install`を実行してインストールを開始する。
+```
+~# blackarch-install
+``
+
+#### 外部ストレージを使用する方法
+1. 事前に`blackarch-install`をHDDなどにコピーする
+2. Live ISOを起動する
+3. 
+```
+~# mount /dev/sdb1 /mnt
+~# cp /mnt/blackarch-install /bin
+~# umount /dev/sdb1
+```
+
+4. `blackarch-install`を実行する
 ```
 ~# blackarch-install
 ```
