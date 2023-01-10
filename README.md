@@ -2,6 +2,10 @@
 New BlackArch Linux Installerは、[BlackArch Installer](https://github.com/BlackArch/blackarch-installer)の非公式フォークです。
 これには、オリジナル版のバグ修正やデスクトップ環境を追加する新たな機能があります。
 
+### 注意
+このスクリプトは、あくまでBlackArch Linux自体のインストールを提供するだけです。
+BlackArchのツールに関するサポートは一切ありません。
+
 ### 新しい機能
 1. オリジナル版の致命的なバグを修正、または対策しました。
 2. デスクトップ環境を追加する新たなオプションを追加しました。これによりユーザーはBlackArchをより一層美しいOSに仕上げることができます。
