@@ -81,7 +81,6 @@ BlackArchのツールに関するサポートは一切ありません。
 ```
 
 #### インストール後の使用例
-> KDE Plasmaを使用中
-![Screenshot_20230101_095927](https://user-images.githubusercontent.com/119842878/210158486-34300379-c85e-4a1b-9c66-73acd8e44c54.png)
+
 
 > [Movies URL](https://youtu.be/_nIWi3kOkgU)
