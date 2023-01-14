@@ -7,8 +7,9 @@ New BlackArch Linux Installerは、[BlackArch Installer](https://github.com/Blac
 BlackArchのツールに関するサポートは一切ありません。
 
 このスクリプトの使用には、年齢制限などはありません。
-
 年齢性別問わずご自由にお使いください！
+
+このスクリプトは、完全にボランティアとして作成されています。
 
 ### 新しい機能
 1. オリジナル版の致命的なバグを修正、または対策しました。
