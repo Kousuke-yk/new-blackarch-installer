@@ -63,7 +63,7 @@ BlackArchのツールに関するサポートは一切ありません。
 #### 外部ストレージを使用する方法
 1. 事前に`blackarch-install`をHDDなどにコピーする
 2. Live ISOを起動する
-3. 
+
 ```
 ~# mount /dev/sdb1 /mnt
 ~# cp /mnt/blackarch-install /bin
