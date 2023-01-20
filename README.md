@@ -3,11 +3,10 @@ New BlackArch Linux Installerは、[BlackArch Installer](https://github.com/Blac
 これには、オリジナル版のバグ修正やデスクトップ環境を追加する新たな機能があります。
 
 ### 注意
-このスクリプトは、あくまでBlackArch Linux自体のインストールを提供するだけです。
-BlackArchのツールに関するサポートは一切ありません。
+このスクリプトは、あくまでBlackArch Linux自体のインストールを提供するまでです。
+BlackArchのツールに対して発生したトラブルに対するサポートはありません。
 
-このスクリプトの使用には、年齢制限などはありません。
-年齢性別問わずご自由にお使いください！
+このスクリプトの使用には、年齢制限などはありません。年齢性別問わずご自由にお使いください！
 
 このスクリプトは、完全に暇つぶしとして作成されています。
 
@@ -73,9 +72,9 @@ BlackArchのツールに関するサポートは一切ありません。
 4. `blackarch-install`を実行する
 ```
 ~# blackarch-install
-```
-
-#### インストール後の使用例
+``
 
 
-> [Movies URL](https://youtu.be/_nIWi3kOkgU)
+#### クレジット
+原作者: noptrix
+改造: kousuke
