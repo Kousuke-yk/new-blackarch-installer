@@ -155,7 +155,7 @@ NORMAL_USER=''
 BA_REPO_URL='https://blackarch.cs.nctu.edu.tw/$repo/os/$arch'
 
 # default ArchLinux repository URL (JAPAN)
-AR_REPO_URL='https://ftp.jaist.ac.jp/pub/archlinux/$repo/os/$arch'
+AR_REPO_URL='https://ftp.jaist.ac.jp/pub/Linux/ArchLinux/$repo/os/$arch'
 
 # X (display + window managers ) setup - default: false
 X_SETUP=$FALSE
@@ -1642,7 +1642,7 @@ setup_extra_packages()
 
   filemanager='thunar dolphin pcmanfm'
 
-  media='dvd+rw-tools ffmpeg yt-dlp mplayer'
+  media='k3b cdrtools cdrdao dvd+rw-tools ffmpeg yt-dlp mplayer'
 
   audio='alsa-utils pulseaudio pavucontrol'
 
@@ -1653,12 +1653,12 @@ setup_extra_packages()
   kernel='linux-headers'
 
   misc='acpi b43-fwcutter bash-completion bc cmake ctags expac
-  feh  it gpm haveged hdparm htop inotify-tools ipython irssi
+  feh git gpm haveged hdparm htop inotify-tools ipython irssi
   linux-atm lsof mercurial mesa mlocate moreutils mpv p7zip rsync
   rtorrent screen scrot smartmontools strace tmux udisks2 unace unrar
   unzip upower usb_modeswitch usbutils zip zsh fcitx5-im fcitx5-mozc
   python ruby php dkms make cmake automake autoconf python-pip
-  zsh-completions grml-zsh-config man-db shared-mime-info jp2a'
+  zsh-completions grml-zsh-config man-db shared-mime-info'
 
   network='atftp bind-tools bridge-utils curl darkhttpd dhclient dhcpcd dialog
   dnscrypt-proxy dnsmasq dnsutils fwbuilder gnu-netcat iw
