@@ -5,6 +5,8 @@
 #                                                                              #
 # AUTHOR                                                                       #
 # kousuke                                                                      #
+#                                                                              #
+# ORIGINAL AUTHOR                                                              #
 # noptrix@nullsecurity.net                                                     #
 #                                                                              #
 ################################################################################
@@ -25,7 +27,7 @@ SUCCESS=0
 FAILURE=1
 
 # signature check
-RESTORESIGN='FALSE'
+SIGNCK='DISABLE'
 
 # verbose mode - default: verbose
 VERBOSE='/dev/stdout'
@@ -153,7 +155,7 @@ NORMAL_USER=''
 BA_REPO_URL='https://blackarch.cs.nctu.edu.tw/$repo/os/$arch'
 
 # default ArchLinux repository URL (JAPAN)
-AR_REPO_URL='https://mirrors.cat.net/archlinux/$repo/os/$arch'
+AR_REPO_URL='https://ftp.jaist.ac.jp/pub/archlinux/$repo/os/$arch'
 
 # X (display + window managers ) setup - default: false
 X_SETUP=$FALSE
@@ -183,13 +185,8 @@ ISO_TYPE=''
 # Exit on CTRL + c
 ctrl_c() {
   printf "\n"
-  warn "Do you want to abort the installation? [y/n]: "
-  read CANCEL
-  if [ "$CANCEL" = "y" ]
-  then
     err "Abort installation..."
     exit $FAILURE
-  fi
   printf "\n"
 }
 
@@ -361,12 +358,12 @@ ask_install_mode()
     [ "$INSTALL_MODE" != "$INSTALL_FULL_ISO" ]
   do
     title 'Welcome to the BlackArch Linux installer!'
-    wprintf '[+] Available installation modes:'
+    wprintf '[+] Let the games begin!'
     printf "\n
-  1. Install from BlackArch repository (online)
-  2. Install from BlackArch Full-ISO (offline)
-  3. Install from sources using blackman (online)\n\n"
-    wprintf '[?] Choose an installation mode: '
+  1. GAME START
+  2. GAME START (BlackArch Full-ISO mode)
+  3. GAME START (blackman mode) \n\n"
+    wprintf '[?] Choose an launch mode: '
     read -r INSTALL_MODE
     if [ "$INSTALL_MODE" = "$INSTALL_FULL_ISO" ]
     then
@@ -416,6 +413,7 @@ set_locale()
     sleep 1
     LOCALE='en_US.UTF-8'
   fi
+
   localectl set-locale "LANG=$LOCALE"
   check $? 'setting locale'
 
@@ -1372,26 +1370,26 @@ setup_time()
     fi
 
    printf "\n\n"
-  printf "[!] Setting up Timezone"
+  printf "[+] Setting up Timezone"
     chroot $CHROOT ln -sf "/usr/share/zoneinfo/$timezone" /etc/localtime \
       > $VERBOSE 2>&1
-    printf "\n\n"
-    printf "[!] Synchronizing time to hardware...\n"
-    chroot $CHROOT hwclock --systohc
 
   printf "\n"
-  printf "[!] Time zone setting is complete."
+  printf "Time zone setting is complete."
 
   return $SUCCESS
 
 }
 
 # setup system clock
-enable_systemclock()
+sync_clock()
 {
-	title 'Live Environment > Other settings'
-	wprintf '[+] Enabling ntp service...'
+	title 'Live Environment > Clock'
+	wprintf '[+] Synchronizing clock'
 	timedatectl set-ntp true
+	sleep 2
+	hwclock --systohc
+	sleep 2
 
 	return $SUCCESS
 
@@ -1416,9 +1414,17 @@ setup_initramfs()
   fi
 
   # terminus font
+  printf "\n\n"
+  printf "[?] Change the console font to Terminus?[y/n]: "
+  read TERFNT
+  if [ "$TERFNT" = "y" ]
+  then
   sed -i 's/keyboard fsck/keyboard fsck consolefont/g' \
     "$CHROOT/etc/mkinitcpio.conf"
   echo 'FONT=ter-114n' >> "$CHROOT/etc/vconsole.conf"
+else
+	printf "[!] The console font has not been changed"
+  fi
 
   if [ $LUKS = $TRUE ]
   then
@@ -1534,6 +1540,9 @@ EOF
     chroot $CHROOT grub-install --target=i386-pc "$HD_DEV" > $VERBOSE 2>&1
 
     cp -f "$BI_PATH/data/boot/grub/splash.png" "$CHROOT/boot/grub/splash.png"
+    sed -i 's/#GRUB_DISABLE_OS_PROBER/GRUB_DISABLE_OS_PROBER/g' "$CHROOT/etc/default/grub"
+    sed -i 's/auto/1280x800/g' "$CHROOT/etc/default/grub"
+    sed -i 's/keep/1920x1080/g' "$CHROOT/etc/default/grub"
 
     printf "\n"
     printf "[+] Running grub-mkconfig\n\n"
@@ -1633,7 +1642,7 @@ setup_extra_packages()
 
   filemanager='thunar dolphin pcmanfm'
 
-  media='k3b cdrtools cdrdao dvd+rw-tools ffmpeg yt-dlp mplayer'
+  media='dvd+rw-tools ffmpeg yt-dlp mplayer'
 
   audio='alsa-utils pulseaudio pavucontrol'
 
@@ -1644,12 +1653,12 @@ setup_extra_packages()
   kernel='linux-headers'
 
   misc='acpi b43-fwcutter bash-completion bc cmake ctags expac
-  feh git gpm haveged hdparm htop inotify-tools ipython irssi
+  feh  it gpm haveged hdparm htop inotify-tools ipython irssi
   linux-atm lsof mercurial mesa mlocate moreutils mpv p7zip rsync
   rtorrent screen scrot smartmontools strace tmux udisks2 unace unrar
   unzip upower usb_modeswitch usbutils zip zsh fcitx5-im fcitx5-mozc
   python ruby php dkms make cmake automake autoconf python-pip
-  zsh-completions grml-zsh-config man-db shared-mime-info'
+  zsh-completions grml-zsh-config man-db shared-mime-info jp2a'
 
   network='atftp bind-tools bridge-utils curl darkhttpd dhclient dhcpcd dialog
   dnscrypt-proxy dnsmasq dnsutils fwbuilder gnu-netcat iw
@@ -1794,7 +1803,7 @@ os-release,sysctl.d,systemd} "$CHROOT/etc/." > $VERBOSE 2>&1
 setup_im()
 {
   title 'BlackArch Linux Setup > Input Methot Setup'
-  wprintf '[+] Adding fcitx5 to environment variables...'
+  wprintf '[+] Adding fcitx5 to environment variables'
   cp "/etc/environment" "/mnt/etc"
   chroot $CHROOT sed -i '5a GTK_IM_MODULE=fcitx5' "/etc/environment"
   chroot $CHROOT sed -i '6a QT_IM_MODULE=fcitx5' "/etc/environment"
@@ -1925,7 +1934,7 @@ disable_sign_check1()
 	title 'Pacman Settings > Signature Check (Live environment)'
 	wprintf '[+] Disabling signature check'
 	printf "\n\n"
-	      sed -i "s/Required DatabaseOptional/Never/" "/etc/pacman.conf"
+	sed -i "s/Required DatabaseOptional/Never/" "/etc/pacman.conf"
         sed -i "s/LocalFileSigLevel/#LocalFileSigLevel/" "/etc/pacman.conf"
 
   return $SUCCESS
@@ -1939,18 +1948,18 @@ disable_sign_check2()
 	wprintf '[+] Setting up signature check'
 	printf "\n\n"
 
-	if [ "$RESTORESIGN" = "FALSE" ]
+	if [ "$SIGNCK" = "DISABLE" ]
 	then
-  printf "[+] Disabling signature check"
-	      sed -i "s/Required DatabaseOptional/Never/" "/mnt/etc/pacman.conf"
-        sed -i "s/LocalFileSigLevel/#LocalFileSigLevel/" "/mnt/etc/pacman.conf"
+		printf "[+] Disabling signature check"
+		sed -i "s/Required DatabaseOptional/Never/" "/mnt/etc/pacman.conf"
+		sed -i "s/LocalFileSigLevel/#LocalFileSigLevel/" "/mnt/etc/pacman.conf"
 	fi
 
-	if [ "$RESTORESIGN" = "TRUE" ]
+	if [ "$SIGNCK" = "ENABLE" ]
 	then
 		printf "[+] Restoring default settings"
-	      sed -i "s/Never/Required DatabaseOptional/" "/mnt/etc/pacman.conf"
-        sed -i "s/#LocalFileSigLevel/LocalFileSigLevel/" "/mnt/etc/pacman.conf"
+		sed -i "s/Never/Required DatabaseOptional/" "/mnt/etc/pacman.conf"
+		sed -i "s/#LocalFileSigLevel/LocalFileSigLevel/" "/mnt/etc/pacman.conf"
 	fi
 
 	return $SUCCESS
@@ -1967,7 +1976,7 @@ ask_de_setup()
 		printf "\n"
 		printf "Burn! Set your soul on fire and unlock the future\n"
 		sleep 2
-    printf "\n"
+		printf "\n"
 		printf "It is time to live life to the fullest"
 		sleep 3
 	fi
@@ -2043,7 +2052,7 @@ install_de()
 
 	printf "\n"
         wprintf '[+] Enabling Display Manager'
-        printf "\n"
+        printf "\n\n"
 	chroot $CHROOT systemctl enable $DE_MAN
 	sleep 1
 	printf "\n\n"
@@ -2092,16 +2101,7 @@ setup_window_managers()
 
   while true
   do
-    printf "
-  1. Awesome
-  2. Fluxbox
-  3. I3-wm
-  4. Openbox
-  5. Spectrwm
-  6. All of the above
-  \n"
-    wprintf '[?] Choose an option [6]: '
-    read -r choice
+    choice='6'
     echo
     case $choice in
       1)
@@ -2552,7 +2552,7 @@ run_update_initramfs()
 {
 	title 'Game Over'
 
-	wprintf '[+] Running Update-InitramFS'
+	wprintf '[+] Running mkinitcpio'
 	printf "\n\n"
 	chroot $CHROOT mkinitcpio -P
 
@@ -2641,10 +2641,10 @@ main()
     esac
     sleep_clear 1
 
-    check_inet_conn
+    sync_clock
     sleep_clear 1
 
-    enable_systemclock
+    check_inet_conn
     sleep_clear 1
 
     # truble fixing
@@ -2697,7 +2697,7 @@ main()
   fi
 
   # epilog
-  RESTORESIGN='TRUE'
+  SIGNCK='ENABLE'
   disable_sign_check2
   sleep_clear 1
   run_update_initramfs
