@@ -1626,14 +1626,14 @@ setup_extra_packages()
 
   browser='chromium elinks firefox'
 
-  editor='hexedit nano vim pinta'
+  editor='hexedit nano vim mousepad'
 
   filesystem='cifs-utils dmraid dosfstools exfat-utils f2fs-tools
   gpart gptfdisk mtools nilfs-utils ntfs-3g partclone parted partimage'
 
   filemanager='thunar dolphin pcmanfm'
 
-  media='k3b cdrtools cdrdao dvd+rw-tools ffmpeg yt-dlp mplayer'
+  media='ffmpeg yt-dlp mplayer'
 
   audio='alsa-utils pulseaudio pavucontrol'
 
@@ -1648,8 +1648,7 @@ setup_extra_packages()
   linux-atm lsof mercurial mesa mlocate moreutils mpv p7zip rsync
   rtorrent screen scrot smartmontools strace tmux udisks2 unace unrar
   unzip upower usb_modeswitch usbutils zip zsh fcitx5-im fcitx5-mozc
-  python ruby php dkms make cmake automake autoconf python-pip
-  zsh-completions grml-zsh-config man-db shared-mime-info'
+  python'
 
   network='atftp bind-tools bridge-utils curl darkhttpd dhclient dhcpcd dialog
   dnscrypt-proxy dnsmasq dnsutils fwbuilder gnu-netcat iw
