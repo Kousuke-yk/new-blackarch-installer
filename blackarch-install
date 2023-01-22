@@ -1667,7 +1667,7 @@ setup_user()
     then
       chroot /mnt echo "root:$SUPASS" | chpasswd
     else
-      chroot /mnt echo "$user:$NUPASS" |chpasswd
+      chroot /mnt echo "$user:$NUPASS" | chpasswd
     fi
     res=$?
   done
