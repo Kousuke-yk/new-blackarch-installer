@@ -1665,9 +1665,9 @@ setup_user()
   do
     if [ "$user" = "root" ]
     then
-      chroot /mnt echo "root:$SUPASS" | sudo chpasswd
+      chroot /mnt echo "root:$SUPASS" | chpasswd
     else
-      chroot /mnt echo "$user:$NUPASS" | sudo chpasswd
+      chroot /mnt echo "$user:$NUPASS" |chpasswd
     fi
     res=$?
   done
