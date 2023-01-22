@@ -1234,14 +1234,13 @@ ask_supasswd()
   title 'Set password for root user'
   wprintf '[?] Enter root password: '
   read SUPASS
-  printf "\n\n
-  Re-enter password:"
+  printf "\n\n"
+  printf "Re-enter password:"
   read CKSUP
 
   if [ "$CKSUP" = "$SUPASS" ]
   then
-  printf "\n\n
-  Password verified"
+  printf "\n\nPassword verified"
   else
   clear
   err 'Passwords do not match!'
@@ -1262,20 +1261,20 @@ ask_username()
 
 ask_passwd()
 {
-  title 'Set password for $NORMAL_USER'
-  wprintf '[?] Enter $NORMAL_USER password: '
+  title 'Set password user'
+  printf "[?] Enter $NORMAL_USER password: "
   read NUPASS
-  printf "\n\n
-  Re-enter password:"
+  printf "\n\n"
+  printf "Re-enter password:"
   read CKNP
 
   if [ "$CKNP" = "$NUPASS" ]
   then
-  printf "\n\n
-  Password verified"
+  printf "\n\n"
+  printf "Password verified"
   else
   clear
-  err 'Passwords do not match!'
+  printf "Passwords do not match!\n\n"
   ask_passwd
   fi
   sleep 2
@@ -1286,7 +1285,8 @@ select_de_x11()
 {
   title 'Install X11 and Desktop Environment'
   wprintf '[+] Do you want to install LXDM only or desktop environment?'
-  printf "\n\n
+  printf "\n\n"
+  printf "
   1. X11 + LXDM + Display Manager (BlackArch default)
   2. Desktop Environmrnt (informal. KDE Plasma and GNOME (Wayland), LXDE)
   3. Does not install desktop environment (only CUI)
@@ -1318,7 +1318,7 @@ select_additional_pkg()
   read VMASK
   printf "\n\n[?] Setup BlackArch Tools [y/n]: "
   read BAASK
-  printf "\n\n[?] Setup BlackArch Tools [y/n]: "
+  printf "\n\n[?] Setup and Download Stable Diffusion [y/n]: "
   read STASK
 
   sleep 1
@@ -1488,7 +1488,7 @@ setup_initramfs()
 
   # terminus font
   printf "\n\n"
-  printf "[?] Change the console font to Terminus?[y/n]: "
+  printf "[?] Change the console font to Terminus? [y/n]: "
   read TERFNT
   if [ "$TERFNT" = "y" ]
   then
@@ -1665,9 +1665,9 @@ setup_user()
   do
     if [ "$user" = "root" ]
     then
-      chroot echo "root:$SUPASS" | sudo chpasswd
+      chroot /mnt echo "root:$SUPASS" | sudo chpasswd
     else
-      chroot echo "$user:$NUPASS" | sudo chpasswd
+      chroot /mnt echo "$user:$NUPASS" | sudo chpasswd
     fi
     res=$?
   done
@@ -2300,7 +2300,6 @@ easter_backdoor()
 }
 
 
-}
 
 # perform sync
 sync_disk()
@@ -2374,8 +2373,13 @@ main()
   sleep_clear 0
 
   # network
+  
   ask_hostname
   sleep_clear 0
+
+  get_net_ifs
+  ask_net_conf_mode
+
 
   if [ "$NET_CONF_MODE" != "$NET_CONF_SKIP" ]
     then
@@ -2406,7 +2410,6 @@ main()
     check_inet_conn
     sleep_clear 1
 
-  fi
 
   # hard drive
   get_hd_devs
