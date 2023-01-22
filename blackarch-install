@@ -157,6 +157,8 @@ BA_REPO_URL='https://blackarch.cs.nctu.edu.tw/$repo/os/$arch'
 # default ArchLinux repository URL (JAPAN)
 AR_REPO_URL='https://ftp.jaist.ac.jp/pub/Linux/ArchLinux/$repo/os/$arch'
 
+MDURL='https://huggingface.co/Linaqruf/anything-v3-better-vae/resolve/main/any-v3-fp32-better-vae.ckpt'
+
 # X (display + window managers ) setup - default: false
 X_SETUP=$FALSE
 
@@ -271,20 +273,6 @@ check_boot_mode()
 }
 
 
-# check type of iso
-check_iso_type()
-{
-  if [ "$(which dnsspider 2> /dev/null)" ]
-  then
-    ISO_TYPE='full'
-  else
-    ISO_TYPE='net'
-  fi
-
-  return $SUCCESS
-}
-
-
 # sleep and clear
 sleep_clear()
 {
@@ -349,43 +337,10 @@ check_uid()
 }
 
 
-# welcome and ask for installation mode
-ask_install_mode()
-{
-  while
-    [ "$INSTALL_MODE" != "$INSTALL_REPO" ] && \
-    [ "$INSTALL_MODE" != "$INSTALL_BLACKMAN" ] && \
-    [ "$INSTALL_MODE" != "$INSTALL_FULL_ISO" ]
-  do
-    title 'Welcome to the BlackArch Linux installer!'
-    wprintf '[+] Let the games begin!'
-    printf "\n
-  1. GAME START
-  2. GAME START (BlackArch Full-ISO mode)
-  3. GAME START (blackman mode) \n\n"
-    wprintf '[?] Choose an launch mode: '
-    read -r INSTALL_MODE
-    if [ "$INSTALL_MODE" = "$INSTALL_FULL_ISO" ]
-    then
-      if [ "$ISO_TYPE" = "net" ]
-      then
-        err 'WTF, Full-ISO mode with Netinstall? Nope!'
-        sleep 3
-        sleep_clear 1
-        ask_install_mode
-        INSTALL_MODE=''
-      fi
-    fi
-    clear
-  done
-
-  return $SUCCESS
-}
-
 # set locale to use
 set_locale()
 {
-  title 'Environment > Language Setup'
+  title 'Welcome to BlackArch Linux Installer!'
   wprintf '[+] Select Language'
   printf "\n"
   printf "
@@ -408,10 +363,7 @@ set_locale()
   # default locale
   if [ -z "$LANG" ]
   then
-    echo
-    warn 'Setting default locale: en_US.UTF-8'
-    sleep 1
-    LOCALE='en_US.UTF-8'
+    set_locale
   fi
 
   localectl set-locale "LANG=$LOCALE"
@@ -446,11 +398,9 @@ set_keymap()
   # default keymap
   if [ -z "$KEYMP" ]
   then
-    echo
-    warn 'Setting default keymap: Japanese'
-    sleep 1
-    KEYMAP='jp106'
+  set_keymap
   fi
+
   localectl set-keymap --no-convert "$KEYMAP"
   loadkeys "$KEYMAP" > $VERBOSE 2>&1
   check $? 'setting keymap'
@@ -774,19 +724,7 @@ check_inet_conn()
 
 }
 
-# live environment keyring is update
-update_keyring()
-{
-	title 'Pacman Setup > Initialize keyring'
-	wprintf '[+] Changing mirrorlist'
-	echo "Server = $AR_REPO_URL" > /etc/pacman.d/mirrorlist
-	echo "Server = $BA_REPO_URL" > /etc/pacman.d/blackarch-mirrorlist
-	printf "\n\n"
-	wprintf '[+] Initializing keyring'
-	printf "\n\n"
-	pacman -Syy archlinux-keyring blackarch-keyring --noconfirm
-	return $SUCCESS
-}
+
 
 # ask user for dualboot install
 ask_dualboot()
@@ -1291,6 +1229,167 @@ install_base_packages()
 }
 
 
+ask_supasswd()
+{
+  title 'Set password for root user'
+  wprintf '[?] Enter root password: '
+  read SUPASS
+  printf "\n\n
+  Re-enter password:"
+  read CKSUP
+
+  if [ "$CKSUP" = "$SUPASS" ]
+  then
+  printf "\n\n
+  Password verified"
+  else
+  clear
+  err 'Passwords do not match!'
+  ask_supasswd
+  fi
+  sleep 2
+
+}
+
+
+ask_username()
+{
+  title 'User setup'
+  wprintf '[?] Enter Username: '
+  read NORMAL_USER
+}
+
+
+ask_passwd()
+{
+  title 'Set password for $NORMAL_USER'
+  wprintf '[?] Enter $NORMAL_USER password: '
+  read NMPASS
+  printf "\n\n
+  Re-enter password:"
+  read CKNP
+
+  if [ "$CKNP" = "$NMPASS" ]
+  then
+  printf "\n\n
+  Password verified"
+  else
+  clear
+  err 'Passwords do not match!'
+  ask_passwd
+  fi
+  sleep 2
+} 
+
+
+select_de_x11()
+{
+  title 'Install X11 and Desktop Environment'
+  wprintf '[+] Do you want to install LXDM only or desktop environment?'
+  printf "\n\n
+  1. X11 + LXDM + Display Manager (BlackArch default)
+  2. Desktop Environmrnt (informal. KDE Plasma and GNOME (Wayland), LXDE)
+  3. Does not install desktop environment (only CUI)
+  \n\n"
+
+  printf "[?] which one would you like?[1]: "
+  read CKX11
+
+  if [ "$CKX11" = "1" ]
+  then
+  X_SETUP="$TRUE"
+  fi
+
+  if [ "$CKX11" = "2" ]
+  then
+  DE_SETUP="ENABLED"
+  sleep_clear
+  select_de
+  fi
+
+}
+
+select_additional_pkg()
+{
+  title 'Other packages'
+  printf "\n\n[?] Setup Virtualbox modules [y/n]: "
+  read VBASK
+  printf "\n\n[?] Setup VMWare modules [y/n]: "
+  read VMASK
+  printf "\n\n[?] Setup BlackArch Tools [y/n]: "
+  read BAASK
+  printf "\n\n[?] Setup BlackArch Tools [y/n]: "
+  read STASK
+
+  sleep 1
+
+  if [ "$VBASK" = "y" ]
+  then
+  VBOX_SETUP="$TRUE"
+  fi
+
+  if [ "$VMASK" = "y" ]
+  then
+  VMWARE_SETUP="$TRUE"
+  fi
+
+  if [ "$BAASK" = "y" ]
+  then
+  BAT_SETUP="$TRUE"
+  fi
+
+  if [ "$STASK" = "y" ]
+  then
+  STDIFF_SETUP="$TRUE"
+  sleep_clear 1
+  fi
+
+}
+
+
+select_de()
+{
+	title 'Desktop Environment'
+
+	wprintf '[?] Please Select Desktop Environment'
+	printf "\n\n"
+	printf "
+	1. KDE Plasma
+	2. GNOME
+	3. LXDE
+	\n"
+
+	wprintf '[?] Choose Desktop Environment: '
+	read -r DE
+
+	if [ "$DE" = "1" ]
+	then
+		DE_MAIN='plasma'
+		DE_EXTPKG='konsole kdeconnect audiocd-kio k3b spectacle'
+		DE_MAN='sddm'
+	fi
+
+	if [ "$DE" = "2" ]
+	then
+		DE_MAIN='gnome'
+		DE_EXTPKG='gnome-extra gnome-screenshot'
+		DE_MAN='gdm'
+	fi
+
+	if [ "$DE" = "3" ]
+	then
+		DE_MAIN='lxde'
+		DE_EXTPKG='xterm spectacle'
+		DE_MAN='lxdm'
+	fi
+
+	sleep 2
+
+	return $SUCCESS
+
+}
+
+
 # setup /etc/resolv.conf
 setup_resolvconf()
 {
@@ -1348,52 +1447,26 @@ setup_locale()
 setup_time()
 {
    title 'Base System Setup > Timezone'
-   wprintf '[?] Select Timezone'
-   printf "\n\n"
+   wprintf "[+] Setting up Timezone"
 
-   printf "
-   1. JST (JAPAN)
-   2. UTC (USA,EU)
-   \n"
-
-    wprintf "\n[?] What is your: "
-    read -r TZ
-
-    if [ "$TZ" = "1" ]
-    then
-	    timezone='Asia/Tokyo'
-    fi
-
-    if [ "$TZ" = "2" ]
+     if [ "$LANG" = "1" ]
     then
 	    timezone='UTC'
     fi
 
-   printf "\n\n"
-  printf "[+] Setting up Timezone"
+    if [ "$LANG" = "2" ]
+    then
+	    timezone='Asia/Tokyo'
+    fi
+
     chroot $CHROOT ln -sf "/usr/share/zoneinfo/$timezone" /etc/localtime \
       > $VERBOSE 2>&1
 
-  printf "\n"
-  printf "Time zone setting is complete."
-
+  
   return $SUCCESS
 
 }
 
-# setup system clock
-sync_clock()
-{
-	title 'Live Environment > Clock'
-	wprintf '[+] Synchronizing clock'
-	timedatectl set-ntp true
-	sleep 2
-	hwclock --systohc
-	sleep 2
-
-	return $SUCCESS
-
-}
 
 
 # setup initramfs
@@ -1423,7 +1496,9 @@ setup_initramfs()
     "$CHROOT/etc/mkinitcpio.conf"
   echo 'FONT=ter-114n' >> "$CHROOT/etc/vconsole.conf"
 else
+  printf "\n\n"
 	printf "[!] The console font has not been changed"
+  printf "\n\n"
   fi
 
   if [ $LUKS = $TRUE ]
@@ -1554,16 +1629,6 @@ EOF
 }
 
 
-# ask for normal user account to setup
-ask_user_account()
-{
-  title 'Base System Setup > User'
-  wprintf '[?] User name: '
-  read -r NORMAL_USER
-
-  return $SUCCESS
-}
-
 # setup user account, password and environment
 setup_user()
 {
@@ -1611,20 +1676,46 @@ setup_user()
   return $SUCCESS
 }
 
-# reinitialize keyring (archlinux keyring only)
-reinitialize_keyring()
+
+# run strap.sh
+run_strap_sh()
 {
-  title 'Base System Setup > Keyring Reinitialization'
+  strap_sh='/tmp/strap.sh'
+  orig_sha1="$(curl -s https://blackarch.org/checksums/strap | awk '{print $1}')"
 
-  wprintf '[+] Reinitializing keyrings'
+  title 'BlackArch Linux Setup > Strap'
+
+  wprintf '[+] Downloading and executing strap.sh'
+  printf "\n\n"
+  warn 'This can take a while, please wait...'
   printf "\n"
-  sleep 2
 
-  chroot $CHROOT pacman -S --overwrite='*' --noconfirm archlinux-keyring \
-    > $VERBOSE 2>&1
+  curl -s -o $strap_sh 'https://www.blackarch.org/strap.sh' > $VERBOSE 2>&1
+  sha1="$(sha1sum $strap_sh | awk '{print $1}')"
+
+  if [ "$sha1" = "$orig_sha1" ]
+  then
+    mv $strap_sh "${CHROOT}${strap_sh}"
+    chmod a+x "${CHROOT}${strap_sh}"
+    chroot $CHROOT echo "$BA_REPO_URL" | sh ${CHROOT}${strap_sh} > $VERBOSE 2>&1
+  else
+    { err "Wrong SHA1 sum for strap.sh: $sha1 (orig: $orig_sha1). Aborting!"; exit $FAILURE; }
+  fi
+
+  # add blackarch linux mirror if we are in chroot
+  if ! grep -q 'blackarch' "$CHROOT/etc/pacman.conf"
+  then
+    printf '[blackarch]\nServer = %s\n' "$BA_REPO_URL" \
+      >> "$CHROOT/etc/pacman.conf"
+  else
+    sed -i "/\[blackarch\]/{ n;s?Server.*?Server = $BA_REPO_URL?; }" \
+      "$CHROOT/etc/pacman.conf"
+  fi
 
   return $SUCCESS
 }
+
+
 
 # install extra (missing) packages
 setup_extra_packages()
@@ -1642,7 +1733,7 @@ setup_extra_packages()
 
   filemanager='thunar dolphin pcmanfm'
 
-  media='k3b cdrtools cdrdao dvd+rw-tools ffmpeg yt-dlp mplayer'
+  media='ffmpeg yt-dlp mplayer'
 
   audio='alsa-utils pulseaudio pavucontrol'
 
@@ -1657,8 +1748,7 @@ setup_extra_packages()
   linux-atm lsof mercurial mesa mlocate moreutils mpv p7zip rsync
   rtorrent screen scrot smartmontools strace tmux udisks2 unace unrar
   unzip upower usb_modeswitch usbutils zip zsh fcitx5-im fcitx5-mozc
-  python ruby php dkms make cmake automake autoconf python-pip
-  zsh-completions grml-zsh-config man-db shared-mime-info'
+  python'
 
   network='atftp bind-tools bridge-utils curl darkhttpd dhclient dhcpcd dialog
   dnscrypt-proxy dnsmasq dnsutils fwbuilder gnu-netcat iw
@@ -1701,70 +1791,6 @@ setup_extra_packages()
 
   chroot $CHROOT pacman -S --needed --overwrite='*' --noconfirm $all \
     > $VERBOSE 2>&1
-
-  return $SUCCESS
-}
-
-
-# perform system base setup/configurations
-setup_base_system()
-{
-  if [ "$INSTALL_MODE" = "$INSTALL_FULL_ISO" ]
-  then
-    dump_full_iso
-    sleep_clear 1
-  fi
-
-  if [ "$INSTALL_MODE" != "$INSTALL_FULL_ISO" ]
-  then
-    pass_mirror_conf # copy mirror list to chroot env
-
-    setup_resolvconf
-    sleep_clear 1
-
-    install_base_packages
-    sleep_clear 1
-
-    setup_resolvconf
-    sleep_clear 1
-  fi
-
-  setup_fstab
-  sleep_clear 1
-
-  setup_proc_sys_dev
-  sleep_clear 1
-
-  setup_locale
-  sleep_clear 1
-
-  setup_initramfs
-  sleep_clear 1
-
-  setup_hostname
-  sleep_clear 1
-
-  setup_user "root"
-  sleep_clear 1
-
-  ask_user_account
-  sleep_clear 1
-
-  setup_user "$NORMAL_USER"
-  sleep_clear 1
-
-  if [ "$INSTALL_MODE" != "$INSTALL_FULL_ISO" ]
-  then
-    reinitialize_keyring
-    sleep_clear 1
-    disable_sign_check2
-    sleep_clear 1
-    setup_extra_packages
-    sleep_clear 1
-  fi
-
-  setup_bootloader
-  sleep_clear 1
 
   return $SUCCESS
 }
@@ -1889,43 +1915,58 @@ pass_mirror_conf()
     > $VERBOSE 2>&1
 }
 
-
-# run strap.sh
-run_strap_sh()
+# setup system clock
+sync_clock()
 {
-  strap_sh='/tmp/strap.sh'
-  orig_sha1="$(curl -s https://blackarch.org/checksums/strap | awk '{print $1}')"
+	title 'Live Environment > Clock'
+	wprintf '[+] Synchronizing clock'
+	timedatectl set-ntp true
+	sleep 2
+	hwclock --systohc
+	sleep 2
 
-  title 'BlackArch Linux Setup > Strap'
+	return $SUCCESS
 
-  wprintf '[+] Downloading and executing strap.sh'
-  printf "\n\n"
-  warn 'This can take a while, please wait...'
+}
+
+# live environment keyring is update
+update_keyring()
+{
+	title 'Pacman Setup > Initialize keyring'
+	echo "Server = $AR_REPO_URL" > /etc/pacman.d/mirrorlist
+	echo "Server = $BA_REPO_URL" > /etc/pacman.d/blackarch-mirrorlist
+	wprintf '[+] Initializing keyring'
+	printf "\n\n"
+	pacman -Syy archlinux-keyring blackarch-keyring --noconfirm
+	return $SUCCESS
+}
+
+
+# reinitialize keyring (archlinux keyring only)
+reinitialize_keyring()
+{
+  title 'Base System Setup > Keyring Reinitialization'
+
+  wprintf '[+] Reinitializing keyrings'
   printf "\n"
+  sleep 2
 
-  curl -s -o $strap_sh 'https://www.blackarch.org/strap.sh' > $VERBOSE 2>&1
-  sha1="$(sha1sum $strap_sh | awk '{print $1}')"
-
-  if [ "$sha1" = "$orig_sha1" ]
-  then
-    mv $strap_sh "${CHROOT}${strap_sh}"
-    chmod a+x "${CHROOT}${strap_sh}"
-    chroot $CHROOT echo "$BA_REPO_URL" | sh ${CHROOT}${strap_sh} > $VERBOSE 2>&1
-  else
-    { err "Wrong SHA1 sum for strap.sh: $sha1 (orig: $orig_sha1). Aborting!"; exit $FAILURE; }
-  fi
-
-  # add blackarch linux mirror if we are in chroot
-  if ! grep -q 'blackarch' "$CHROOT/etc/pacman.conf"
-  then
-    printf '[blackarch]\nServer = %s\n' "$BA_REPO_URL" \
-      >> "$CHROOT/etc/pacman.conf"
-  else
-    sed -i "/\[blackarch\]/{ n;s?Server.*?Server = $BA_REPO_URL?; }" \
-      "$CHROOT/etc/pacman.conf"
-  fi
+  chroot $CHROOT pacman -S --overwrite='*' --noconfirm archlinux-keyring \
+    > $VERBOSE 2>&1
 
   return $SUCCESS
+}
+
+
+# reinitialization blackarch-keyring
+reupdate_keyring()
+{
+	title 'Pacman Setup > Keyring reinitialization'
+	wprintf '[+] Reinitializing keyrings'
+	printf "\n\n"
+	chroot $CHROOT pacman -Syy archlinux-keyring blackarch-keyring --noconfirm
+
+	return $SUCCESS
 }
 
 # disable pacman signature check for live environment
@@ -1966,80 +2007,6 @@ disable_sign_check2()
 
 }
 
-# ask desktop environment
-ask_de_setup()
-{
-	DE_SETUP='DISABLED'
-	if confirm 'BlackArch Linux Setup > Desktop Environment' '[?] Setup Desktop Environments [y/n]: '
-	then
-		DE_SETUP='ENABLED'
-		printf "\n"
-		printf "Burn! Set your soul on fire and unlock the future\n"
-		sleep 2
-		printf "\n"
-		printf "It is time to live life to the fullest"
-		sleep 3
-	fi
-
-	return $SUCCESS
-
-}
-
-# ask user for X (display + window manager) setup
-ask_x_setup()
-{
-  if confirm 'BlackArch Linux Setup > X11' '[?] Setup X11 + window managers [y/n]: '
-  then
-    X_SETUP=$TRUE
-    printf "\n"
-    printf "${BLINK}NOOB! NOOB! NOOB! NOOB! NOOB! NOOB! NOOB!${NC}\n\n"
-  fi
-
-  return $SUCCESS
-}
-
-# select desktop environmrnt
-select_de()
-{
-	title 'BlackArch Linux Setup > Desktop Environment'
-
-	wprintf '[?] Please Select Desktop Environment'
-	printf "\n\n"
-	printf "
-	1. KDE Plasma
-	2. GNOME
-	3. LXDE
-	\n"
-
-	wprintf '[?] Choose Desktop Environment: '
-	read -r DE
-
-	if [ "$DE" = "1" ]
-	then
-		DE_MAIN='plasma'
-		DE_EXTPKG='konsole kdeconnect audiocd-kio k3b spectacle'
-		DE_MAN='sddm'
-	fi
-
-	if [ "$DE" = "2" ]
-	then
-		DE_MAIN='gnome'
-		DE_EXTPKG='gnome-extra gnome-screenshot'
-		DE_MAN='gdm'
-	fi
-
-	if [ "$DE" = "3" ]
-	then
-		DE_MAIN='lxde'
-		DE_EXTPKG='xterm spectacle'
-		DE_MAN='lxdm'
-	fi
-
-	sleep 2
-
-	return $SUCCESS
-
-}
 
 # install desktop environment
 install_de()
@@ -2354,151 +2321,6 @@ update_user_groups()
 }
 
 
-# dump data from the full-iso
-dump_full_iso()
-{
-  full_dirs='/bin /sbin /etc /home /lib /lib64 /opt /root /srv /usr /var /tmp'
-  total_size=0 # no cheat
-
-  title 'BlackArch Linux Setup'
-
-  wprintf '[+] Dumping data from Full-ISO. Grab a coffee and pop shells!'
-  printf "\n\n"
-
-  wprintf '[+] Fetching total size to transfer, please wait...'
-  printf "\n"
-
-  for d in $full_dirs
-  do
-    part_size=$(du -sm "$d" 2> /dev/null | awk '{print $1}')
-    ((total_size+=part_size))
-    printf "
-  > $d $part_size MB"
-  done
-  printf "\n
-  [ Total size = $total_size MB ]
-  \n\n"
-
-  check_space
-
-  wprintf '[+] Installing the backdoors to /'
-  printf "\n\n"
-  warn 'This can take a while, please wait...'
-  printf "\n"
-  rsync -aWx --human-readable --info=progress2 / $CHROOT > $VERBOSE 2>&1
-  wprintf "[+] Installation done!\n"
-
-  # clean up files
-  wprintf '[+] Cleaning Full Environment files, please wait...'
-  sed -i 's/Storage=volatile/#Storage=auto/' ${CHROOT}/etc/systemd/journald.conf
-  rm -rf "$CHROOT/etc/udev/rules.d/81-dhcpcd.rules"
-  rm -rf "$CHROOT/etc/systemd/system/"{choose-mirror.service,pacman-init.service,etc-pacman.d-gnupg.mount,getty@tty1.service.d}
-  rm -rf "$CHROOT/etc/systemd/scripts/choose-mirror"
-  rm -rf "$CHROOT/etc/systemd/system/getty@tty1.service.d/autologin.conf"
-  rm -rf "$CHROOT/root/"{.automated_script.sh,.zlogin}
-  rm -rf "$CHROOT/etc/mkinitcpio-archiso.conf"
-  rm -rf "$CHROOT/etc/initcpio"
-  #rm -rf ${CHROOT}/etc/{group*,passwd*,shadow*,gshadow*}
-  wprintf "done\n"
-
-  return $SUCCESS
-}
-
-
-# setup blackarch related stuff
-setup_blackarch()
-{
-  update_etc
-  sleep_clear 1
-
-  setup_im
-  sleep_clear 1
-
-  enable_iwd_networkd
-  sleep_clear 1
-
-  ask_mirror
-  sleep_clear 1
-
-  run_strap_sh
-  sleep_clear 1
-
-  ask_de_setup
-  sleep_clear 1
-
-  if [ "$DE_SETUP" = "ENABLED" ]
-  then
-	  select_de
-	  sleep_clear 1
-
-	  install_de
-	  sleep_clear 1
-
-	  setup_window_managers
-	  sleep_clear 1
-  fi
-
-  if [ "$DE_SETUP" = "DISABLED" ]
-  then
-  ask_x_setup
-  sleep_clear 3
-  fi
-
-  if [ $X_SETUP -eq $TRUE ]
-  then
-    setup_display_manager
-    sleep_clear 1
-    setup_window_managers
-    sleep_clear 1
-  fi
-
-  reupdate_keyring
-  sleep_clear 1
-  ask_vbox_setup
-  sleep_clear 1
-
-  if [ $VBOX_SETUP -eq $TRUE ]
-  then
-    setup_vbox_utils
-    sleep_clear 1
-  fi
-
-  ask_vmware_setup
-  sleep_clear 1
-
-  if [ $VMWARE_SETUP -eq $TRUE ]
-  then
-    setup_vmware_utils
-    sleep_clear 1
-  fi
-
-  sleep_clear 1
-
-  enable_pacman_multilib 'chroot'
-  sleep_clear 1
-
-  enable_pacman_color 'chroot'
-  sleep_clear 1
-
-  ask_ba_tools_setup
-  sleep_clear 1
-
-  if [ $BA_TOOLS_SETUP -eq $TRUE ]
-  then
-    setup_blackarch_tools
-    sleep_clear 1
-  fi
-
-  if [ -n "$NORMAL_USER" ]
-  then
-    update_user_groups
-    sleep_clear 1
-  fi
-
-  return $SUCCESS
-}
-
-
 # for fun and lulz
 easter_backdoor()
 {
@@ -2522,15 +2344,6 @@ easter_backdoor()
   return $SUCCESS
 }
 
-# reinitialization blackarch-keyring
-reupdate_keyring()
-{
-	title 'Pacman Setup > Keyring reinitialization'
-	wprintf '[+] Reinitializing keyrings'
-	printf "\n\n"
-	chroot $CHROOT pacman -Syy archlinux-keyring blackarch-keyring --noconfirm
-
-	return $SUCCESS
 
 }
 
@@ -2596,11 +2409,6 @@ main()
   check_uid
   check_env
   check_boot_mode
-  check_iso_type
-
-  # install mode
-  ask_install_mode
-  sleep_clear 0
 
   # locale
   set_locale
@@ -2614,11 +2422,7 @@ main()
   ask_hostname
   sleep_clear 0
 
-  if [ "$INSTALL_MODE" != "$INSTALL_FULL_ISO" ]
-  then
-    get_net_ifs
-    ask_net_conf_mode
-    if [ "$NET_CONF_MODE" != "$NET_CONF_SKIP" ]
+  if [ "$NET_CONF_MODE" != "$NET_CONF_SKIP" ]
     then
       ask_net_if
     fi
@@ -2647,20 +2451,6 @@ main()
     check_inet_conn
     sleep_clear 1
 
-    # truble fixing
-    disable_sign_check1
-    sleep_clear 1
-    update_keyring
-    sleep_clear 1
-
-    # self_updater (DISABLED)
-    # sleep_clear 1
-
-    # pacman
-    ask_mirror_arch
-    sleep_clear 1
-    update_pacman
-
   fi
 
   # hard drive
@@ -2683,33 +2473,238 @@ main()
   mount_filesystems
   sleep_clear 1
 
+  ask_info
+  sleep_clear
+  
   # arch linux
   setup_base_system
   sleep_clear 1
-  setup_time
-  sleep_clear 1
 
-  # blackarch Linux
-  if [ "$INSTALL_MODE" != "$INSTALL_FULL_ISO" ]
-  then
-    setup_blackarch
-    sleep_clear 1
-  fi
+  # blackarch setup
+  blackarch_tasksel
+  sleep_clear 1
 
   # epilog
   SIGNCK='ENABLE'
   disable_sign_check2
   sleep_clear 1
+
   run_update_initramfs
   sleep_clear 1
+  
   umount_filesystems
   sleep_clear 1
+  
   sync_disk
   sleep_clear 1
+  
   easter_backdoor
 
   return $SUCCESS
 }
+
+ask_info()
+{
+ # Ask for automatic password setup
+
+  ask_supasswd
+  sleep_clear 1
+
+  ask_username
+  sleep_clear 1
+
+  ask_passwd
+  sleep_clear 1
+  
+  # Select packages to install
+  select_de_x11
+  sleep_clear 1
+
+  select_additional_pkg
+  sleep_clear １
+
+  ask_mirror
+  sleep_clear 1
+}
+
+
+# perform system base setup/configurations
+setup_base_system()
+{
+  disable_sign_check1
+  sleep_clear 1
+    
+  update_keyring
+  sleep_clear 1
+
+  ask_mirror_arch
+  sleep_clear 1
+  
+  update_pacman
+  sleep_clear
+
+  pass_mirror_conf # copy mirror list to chroot env
+
+  setup_resolvconf
+  sleep_clear 1
+
+  install_base_packages
+  sleep_clear 1
+
+  setup_systeminfo
+  sleep_clear 1
+
+  reinitialize_keyring
+  sleep_clear 1
+  
+  disable_sign_check2
+  sleep_clear 1
+  
+  setup_extra_packages
+  sleep_clear 1
+
+  setup_bootloader
+  sleep_clear 1
+
+  return $SUCCESS
+}
+
+setup_systeminfo()
+{
+
+setup_resolvconf
+sleep_clear 1
+
+setup_fstab
+sleep_clear 1
+
+setup_proc_sys_dev
+sleep_clear 1
+
+setup_locale
+sleep_clear 1
+
+setup_initramfs
+sleep_clear 1
+
+setup_hostname
+sleep_clear 1
+
+setup_user "root"
+sleep_clear 1
+
+setup_user "$NORMAL_USER"
+sleep_clear 1
+
+update_user_groups
+sleep_clear 1
+  
+setup_time
+sleep_clear 1
+
+update_etc
+sleep_clear 1
+
+setup_im
+sleep_clear 1
+
+enable_iwd_networkd
+sleep_clear 1
+
+}
+
+
+blackarch_tasksel()
+{
+  run_strap_sh
+  sleep_clear 1
+
+  if [ "$DE_SETUP" = "ENABLED" ]
+  then
+	  install_de
+	  sleep_clear 1
+
+	  setup_window_managers
+	  sleep_clear 1
+  fi
+
+  if [ $X_SETUP -eq $TRUE ]
+  then
+  
+    setup_display_manager
+    sleep_clear 1
+
+    setup_window_managers
+    sleep_clear 1
+  
+  fi
+
+  if [ $VBOX_SETUP -eq $TRUE ]
+  then
+    setup_vbox_utils
+    sleep_clear 1
+  fi
+
+  if [ $VMWARE_SETUP -eq $TRUE ]
+  then
+    setup_vmware_utils
+    sleep_clear 1
+  fi
+
+ if [ $STDIFF_SETUP -eq $TRUE ]
+  then
+    setup_stable_diffusion
+    sleep_clear 1
+  fi
+
+  enable_pacman_multilib 'chroot'
+  sleep_clear 1
+
+  enable_pacman_color 'chroot'
+  sleep_clear 1
+
+  reupdate_keyring
+  sleep_clear 1
+
+  if [ $BAT_SETUP -eq $TRUE ]
+  then
+  setup_blackarch_tools
+  sleep_clear 1
+  fi
+
+
+
+  return $SUCCESS
+}
+
+
+ setup_stable_diffusion()
+ {
+  title 'BlackArch Linux Setup > Stable Diffusion'
+  wprintf '[+] Setting up Stable Diffusion'
+  printf "\n\n
+  -> Cloning repository \n\n"
+  chroot /mnt git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui
+  chroot /mnt chmod 777 ./stable-diffusion-webui
+
+  printf "\n\n
+  -> Downloading Anything-v3.0 \n\n"
+  chroot /mnt wget "$MDURL"
+  
+  printf "\n\n
+  -> Copying file \n\n"
+  chroot /mnt cp ./any-v3-fp32-better-vae.ckpt ./stable-diffusion-webui/models/Stable-diffusion
+  chroot /mnt chmnod 777 ./stable-diffusion-webui/models/Stable-diffusion/any-v3-fp32-better-vae.ckpt
+  chroot /mnt rm ./any-v3-fp32-better-vae.ckpt 
+  
+  }
+
+
+
+
+
+
+
 
 
 # we start here
