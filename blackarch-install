@@ -1264,12 +1264,12 @@ ask_passwd()
 {
   title 'Set password for $NORMAL_USER'
   wprintf '[?] Enter $NORMAL_USER password: '
-  read NMPASS
+  read NUPASS
   printf "\n\n
   Re-enter password:"
   read CKNP
 
-  if [ "$CKNP" = "$NMPASS" ]
+  if [ "$CKNP" = "$NUPASS" ]
   then
   printf "\n\n
   Password verified"
@@ -1660,15 +1660,14 @@ setup_user()
 
   # password
   res=1337
-  wprintf "[?] Set password for $user: "
-  printf "\n\n"
+  wprintf "[+] Setting up password"
   while [ $res -ne 0 ]
   do
     if [ "$user" = "root" ]
     then
-      chroot $CHROOT passwd
+      chroot echo "root:$SUPASS" | sudo chpasswd
     else
-      chroot $CHROOT passwd "$user"
+      chroot echo "$user:$NUPASS" | sudo chpasswd
     fi
     res=$?
   done
@@ -2248,53 +2247,9 @@ setup_blackarch_tools()
   wprintf '[+] Installing BlackArch Linux packages (grab a coffee)'
   printf "\n\n"
 
-  if [ "$INSTALL_MODE" = $INSTALL_REPO ]
-  then
-    wprintf "[+] All available BlackArch tools groups:\n\n"
-    printf "    > blackarch blackarch-anti-forensic blackarch-automation
-    > blackarch-backdoor blackarch-binary blackarch-bluetooth blackarch-code-audit
-    > blackarch-cracker blackarch-crypto blackarch-database blackarch-debugger
-    > blackarch-decompiler blackarch-defensive blackarch-disassembler
-    > blackarch-dos blackarch-drone blackarch-exploitation blackarch-fingerprint
-    > blackarch-firmware blackarch-forensic blackarch-fuzzer blackarch-hardware
-    > blackarch-honeypot blackarch-ids blackarch-keylogger blackarch-malware
-    > blackarch-misc blackarch-mobile blackarch-networking blackarch-nfc
-    > blackarch-packer blackarch-proxy blackarch-recon blackarch-reversing
-    > blackarch-scanner blackarch-sniffer blackarch-social blackarch-spoof
-    > blackarch-threat-model blackarch-tunnel blackarch-unpacker blackarch-voip
-    > blackarch-webapp blackarch-windows blackarch-wireless \n\n"
-    wprintf "[?] BlackArch groups to install (space for multiple) [blackarch]: "
-    read -r BA_GROUPS
-    printf "\n"
-    warn 'This can take a while, please wait...'
-    if [ -z "$BA_GROUPS" ]
-    then
-      printf "\n"
-      check_space
-      printf "\n\n"
-      chroot $CHROOT pacman -S --needed --disable-download-timeout --noconfirm --overwrite='*' blackarch \
-        > $VERBOSE 2>&1
-    else
-      chroot $CHROOT pacman -S --needed --disable-download-timeout --noconfirm --overwrite='*' "$BA_GROUPS" \
-        > $VERBOSE 2>&1
-    fi
-  else
-    warn 'Installing all tools from source via blackman can take hours'
-    printf "\n"
-    wprintf '[+] <Control-c> to abort ... '
-    while [ $foo -gt 0 ]
-    do
-      wprintf "$foo "
-      sleep 1
-      foo=$((foo - 1))
-    done
-    printf "\n"
-    chroot $CHROOT pacman -S --needed --overwrite='*' $noconfirm blackman \
-      > $VERBOSE 2>&1
-    chroot $CHROOT blackman -a > $VERBOSE 2>&1
-  fi
+      chroot $CHROOT pacman -S --needed --disable-download-timeout --noconfirm --overwrite='*' blackarch
 
-  return $SUCCESS
+
 }
 
 
@@ -2672,8 +2627,6 @@ blackarch_tasksel()
   sleep_clear 1
   fi
 
-
-
   return $SUCCESS
 }
 
@@ -2698,14 +2651,6 @@ blackarch_tasksel()
   chroot /mnt rm ./any-v3-fp32-better-vae.ckpt 
   
   }
-
-
-
-
-
-
-
-
 
 # we start here
 main "$@"
