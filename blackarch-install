@@ -25,7 +25,7 @@ SUCCESS=0
 FAILURE=1
 
 # signature check
-RESTORESIGN='FALSE'
+SIGNCK='FALSE'
 
 # verbose mode - default: verbose
 VERBOSE='/dev/stdout'
@@ -1414,6 +1414,8 @@ setup_initramfs()
     cp /run/archiso/bootmnt/blackarch/boot/x86_64/vmlinuz-linux \
       "$CHROOT/boot/vmlinuz-linux"
   fi
+
+printf "\n\
 
   # terminus font
   sed -i 's/keyboard fsck/keyboard fsck consolefont/g' \
