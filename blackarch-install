@@ -9,9 +9,8 @@
 #                                                                              #
 ################################################################################
 
-
 # blackarch-installer version
-VERSION='2.4'
+VERSION='3.0'
 
 # path to blackarch-installer
 BI_PATH='/usr/share/blackarch-installer'
@@ -1958,11 +1957,7 @@ ask_de_setup()
 	if confirm 'BlackArch Linux Setup > Desktop Environment' '[?] Setup Desktop Environments [y/n]: '
 	then
 		DE_SETUP='ENABLED'
-		printf "\n"
-		printf "Burn! Set your soul on fire and unlock the future\n"
-		sleep 2
-    printf "\n"
-		printf "It is time to live life to the fullest"
+		printf "Black and white, just like Othello!"
 		sleep 3
 	fi
 
@@ -1988,12 +1983,13 @@ select_de()
 {
 	title 'BlackArch Linux Setup > Desktop Environment'
 
-	wprintf '[?] Please Select Desktop Environment'
+	wprintf '[?] Please select Desktop environment'
 	printf "\n\n"
 	printf "
 	1. KDE Plasma
 	2. GNOME
 	3. LXDE
+  4. XFCE
 	\n"
 
 	wprintf '[?] Choose Desktop Environment: '
@@ -2017,8 +2013,23 @@ select_de()
 	then
 		DE_MAIN='lxde'
 		DE_EXTPKG='xterm spectacle'
-		DE_MAN='lxdm'
+
+    sleep 2
+    setup_display_manager
+    sleep_clear 1
+
 	fi
+
+	if [ "$DE" = "4" ]
+	then
+		DE_MAIN='xfce4'
+		DE_EXTPKG='spectacle xterm'
+
+    sleep 2
+    setup_display_manager
+    sleep_clear 1
+
+  fi
 
 	sleep 2
 
@@ -2035,7 +2046,7 @@ install_de()
 
 	chroot $CHROOT pacman -S $DE_MAIN $DE_EXTPKG $DE_MAN --disable-download-timeout --noconfirm
 
-	printf "\n"
+	      printf "\n\n"
         wprintf '[+] Enabling Display Manager'
         printf "\n"
 	chroot $CHROOT systemctl enable $DE_MAN
@@ -2083,6 +2094,9 @@ setup_window_managers()
 
   wprintf '[+] Setting up window managers'
   printf "\n\n"
+
+  while true
+  do
 
     choice="6"
     echo
@@ -2394,6 +2408,7 @@ rm_collision_pak()
   printf "\n\n"
 
   chroot $CHROOT pacman -R gnu-netcat rpmextract --noconfirm
+  chroot $CHROOT pacman -R gnu-netcat --noconfirm
 
   printf "\n\n [+] Installing openbsd-netcat and rpm-tools \n\n"
   chroot $CHROOT pacman -S openbsd-netcat rpm-tools --noconfirm
@@ -2640,11 +2655,12 @@ main()
     esac
     sleep_clear 1
 
+    sync_clock
+    sleep_clear 1
+
     check_inet_conn
     sleep_clear 1
 
-    enable_systemclock
-    sleep_clear 1
 
     # truble fixing
     disable_sign_check1
