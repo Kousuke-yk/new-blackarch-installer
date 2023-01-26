@@ -11,7 +11,7 @@
 
 
 # blackarch-installer version
-VERSION='2.3'
+VERSION='2.4'
 
 # path to blackarch-installer
 BI_PATH='/usr/share/blackarch-installer'
@@ -153,7 +153,7 @@ NORMAL_USER=''
 BA_REPO_URL='https://blackarch.cs.nctu.edu.tw/$repo/os/$arch'
 
 # default ArchLinux repository URL (JAPAN)
-AR_REPO_URL='https://mirrors.cat.net/archlinux/$repo/os/$arch'
+AR_REPO_URL='https://ftp.jaist.ac.jp/pub/Linux/ArchLinux/$repo/os/$arch'
 
 # X (display + window managers ) setup - default: false
 X_SETUP=$FALSE
@@ -1350,48 +1350,34 @@ setup_locale()
 setup_time()
 {
    title 'Base System Setup > Timezone'
-   wprintf '[?] Select Timezone'
-   printf "\n\n"
-
-   printf "
-   1. JST (JAPAN)
-   2. UTC (USA,EU)
-   \n"
-
-    wprintf "\n[?] What is your: "
-    read -r TZ
-
-    if [ "$TZ" = "1" ]
-    then
-	    timezone='Asia/Tokyo'
-    fi
-
-    if [ "$TZ" = "2" ]
+   wprintf "[+] Setting up Timezone"
+   
+   if [ "$LANG" = "1" ]
     then
 	    timezone='UTC'
     fi
 
-   printf "\n\n"
-  printf "[!] Setting up Timezone"
+   if [ "$LANG" = "2" ]
+    then
+	    timezone='Asia/Tokyo'
+    fi
+
+  printf "\n\n"
     chroot $CHROOT ln -sf "/usr/share/zoneinfo/$timezone" /etc/localtime \
       > $VERBOSE 2>&1
-    printf "\n\n"
-    printf "[!] Synchronizing time to hardware...\n"
-    chroot $CHROOT hwclock --systohc
-
-  printf "\n"
-  printf "[!] Time zone setting is complete."
+  printf "[OK] Time zone setting is complete."
 
   return $SUCCESS
 
 }
 
 # setup system clock
-enable_systemclock()
+sync_clock()
 {
 	title 'Live Environment > Other settings'
-	wprintf '[+] Enabling ntp service...'
+	wprintf '[+] Setting up clock'
 	timedatectl set-ntp true
+  hwclock --systohc
 
 	return $SUCCESS
 
@@ -1415,12 +1401,19 @@ setup_initramfs()
       "$CHROOT/boot/vmlinuz-linux"
   fi
 
-printf "\n\
-
-  # terminus font
+# terminus font
+printf "\n\n[?] Do you want to change yor terminal font to Terminus? [Y/n]: "
+printf "\n\n"
+read TERMINUS
+if [ "$TERMINUS" = "y" ]
+then
   sed -i 's/keyboard fsck/keyboard fsck consolefont/g' \
     "$CHROOT/etc/mkinitcpio.conf"
   echo 'FONT=ter-114n' >> "$CHROOT/etc/vconsole.conf"
+else
+warn "The font has been not changed!"
+printf "\n"
+fi
 
   if [ $LUKS = $TRUE ]
   then
@@ -1628,14 +1621,14 @@ setup_extra_packages()
 
   browser='chromium elinks firefox'
 
-  editor='hexedit nano vim mousepad'
+  editor='hexedit nano vim mousepad pinta'
 
   filesystem='cifs-utils dmraid dosfstools exfat-utils f2fs-tools
   gpart gptfdisk mtools nilfs-utils ntfs-3g partclone parted partimage'
 
   filemanager='thunar dolphin pcmanfm'
 
-  media='ffmpeg yt-dlp mplayer'
+  media='ffmpeg yt-dlp mplayer cmus'
 
   audio='alsa-utils pulseaudio pavucontrol'
 
@@ -2091,18 +2084,7 @@ setup_window_managers()
   wprintf '[+] Setting up window managers'
   printf "\n\n"
 
-  while true
-  do
-    printf "
-  1. Awesome
-  2. Fluxbox
-  3. I3-wm
-  4. Openbox
-  5. Spectrwm
-  6. All of the above
-  \n"
-    wprintf '[?] Choose an option [6]: '
-    read -r choice
+    choice="6"
     echo
     case $choice in
       1)
@@ -2405,10 +2387,26 @@ dump_full_iso()
   return $SUCCESS
 }
 
+rm_collision_pak()
+{
+  titile "BlackArch Linux Setup > Remove duplicate packages"
+  wprintf "[+] Removing gnu-netcat and rpmextract"
+  printf "\n\n"
 
+  chroot $CHROOT pacman -R gnu-netcat rpmextract --noconfirm
+
+  printf "\n\n [+] Installing openbsd-netcat and rpm-tools \n\n"
+  chroot $CHROOT pacman -S openbsd-netcat rpm-tools --noconfirm
+
+return $SUCCESS
+
+}
 # setup blackarch related stuff
 setup_blackarch()
 {
+  rm_collision_pak
+  sleep_clear 1
+
   update_etc
   sleep_clear 1
 
@@ -2553,7 +2551,7 @@ run_update_initramfs()
 {
 	title 'Game Over'
 
-	wprintf '[+] Running Update-InitramFS'
+	wprintf '[+] Running mkinitcpio'
 	printf "\n\n"
 	chroot $CHROOT mkinitcpio -P
 
@@ -2698,7 +2696,7 @@ main()
   fi
 
   # epilog
-  RESTORESIGN='TRUE'
+  SIGNCK='TRUE'
   disable_sign_check2
   sleep_clear 1
   run_update_initramfs
