@@ -180,15 +180,14 @@ ISO_TYPE=''
 
 # Exit on CTRL + c
 ctrl_c() {
-  printf "\n"
-  warn "Do you want to abort the installation? [y/n]: "
-  read CANCEL
-  if [ "$CANCEL" = "y" ]
-  then
-    err "Abort installation..."
+
+    sleep_clear 1
+    title 'Cancel installation'
+    wprintf '[+] Installation canceled! Cleen up...'
+    printf "\n\n"
+    err 'Aborting...'
     exit $FAILURE
-  fi
-  printf "\n"
+
 }
 
 trap ctrl_c 2
@@ -1521,6 +1520,7 @@ EOF
       "$CHROOT/etc/default/grub"
 
     sed -i 's/#GRUB_COLOR_/GRUB_COLOR_/g' "$CHROOT/etc/default/grub"
+    sed -i "s/#GRUB_DISABLE_OS_PROBER/GRUB_DISABLE_OS_PROBER/g" "$CHROOT/etc/pacman.conf"
 
     printf "\n"
     printf "[+] Running grub-install\n\n"
@@ -1917,8 +1917,8 @@ disable_sign_check1()
 	title 'Pacman Settings > Signature Check (Live environment)'
 	wprintf '[+] Disabling signature check'
 	printf "\n\n"
-	      sed -i "s/Required DatabaseOptional/Never/" "/etc/pacman.conf"
-        sed -i "s/LocalFileSigLevel/#LocalFileSigLevel/" "/etc/pacman.conf"
+	      sed -i "s/Required DatabaseOptional/Never/g" "/etc/pacman.conf"
+        sed -i "s/LocalFileSigLevel/#LocalFileSigLevel/g" "/etc/pacman.conf"
 
   return $SUCCESS
 
@@ -1934,15 +1934,15 @@ disable_sign_check2()
 	if [ "$RESTORESIGN" = "FALSE" ]
 	then
   printf "[+] Disabling signature check"
-	      sed -i "s/Required DatabaseOptional/Never/" "/mnt/etc/pacman.conf"
-        sed -i "s/LocalFileSigLevel/#LocalFileSigLevel/" "/mnt/etc/pacman.conf"
+	      sed -i "s/Required DatabaseOptional/Never/g" "/mnt/etc/pacman.conf"
+        sed -i "s/LocalFileSigLevel/#LocalFileSigLevel/g" "/mnt/etc/pacman.conf"
 	fi
 
 	if [ "$RESTORESIGN" = "TRUE" ]
 	then
 		printf "[+] Restoring default settings"
-	      sed -i "s/Never/Required DatabaseOptional/" "/mnt/etc/pacman.conf"
-        sed -i "s/#LocalFileSigLevel/LocalFileSigLevel/" "/mnt/etc/pacman.conf"
+	      sed -i "s/Never/Required DatabaseOptional/g" "/mnt/etc/pacman.conf"
+        sed -i "s/#LocalFileSigLevel/LocalFileSigLevel/g" "/mnt/etc/pacman.conf"
 	fi
 
 	return $SUCCESS
@@ -1956,7 +1956,7 @@ ask_de_setup()
 	if confirm 'BlackArch Linux Setup > Desktop Environment' '[?] Setup Desktop Environments [y/n]: '
 	then
 		DE_SETUP='ENABLED'
-		printf "Black and white, just like Othello!"
+		printf "\n\n Root: Black and white, just like Othello!"
 		sleep 3
 	fi
 
@@ -2402,7 +2402,7 @@ dump_full_iso()
 
 rm_collision_pak()
 {
-  titile "BlackArch Linux Setup > Remove duplicate packages"
+  title "BlackArch Linux Setup > Remove duplicate packages"
   wprintf "[+] Removing gnu-netcat and rpmextract"
   printf "\n\n"
 
