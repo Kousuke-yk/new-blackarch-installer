@@ -2405,7 +2405,7 @@ rm_collision_pak()
   chroot $CHROOT pacman -R gnu-netcat --noconfirm
 
   printf "\n\n [+] Installing openbsd-netcat and rpm-tools \n\n"
-  chroot $CHROOT pacman -S openbsd-netcat rpm-tools --noconfirm
+  chroot $CHROOT pacman -S openbsd-netcat rpm-tools dkms --noconfirm
 
 return $SUCCESS
 
