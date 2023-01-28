@@ -1066,7 +1066,7 @@ make_luks_partition()
   printf "\n\n"
 
   cryptsetup -q -y -v luksFormat "$part" \
-    > $VERBOSE 2>&1 || { err 'Could not LUKS format, trying again.'; make_luks_partition "$@"; }
+    > $VERBOSE 2>&1 || { clear ; err 'Could not LUKS format, trying again.'; make_luks_partition "$@"; }
 
 }
 
@@ -1082,7 +1082,7 @@ open_luks_partition()
   wprintf '[+] Opening LUKS partition'
   printf "\n\n"
   cryptsetup open "$part" "$name" > $VERBOSE 2>&1 ||
-    { err 'Could not open LUKS device, please try again and make sure that your password is correct.'; open_luks_partition "$@"; }
+    { clear ;err 'Could not open LUKS device, please try again and make sure that your password is correct.'; open_luks_partition "$@"; }
 
 }
 
