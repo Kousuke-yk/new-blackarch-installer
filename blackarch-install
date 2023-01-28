@@ -9,7 +9,7 @@
 ################################################################################
 
 # blackarch-installer version
-VERSION='3.5'
+VERSION="4.1"
 
 # path to blackarch-installer
 BI_PATH='/usr/share/blackarch-installer'
