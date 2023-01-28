@@ -2008,7 +2008,7 @@ select_de()
 		DE_MAIN='lxde'
 		DE_EXTPKG='xterm spectacle'
 
-    sleep 2
+    sleep_clear 1
     setup_display_manager
     sleep_clear 1
 
@@ -2019,7 +2019,7 @@ select_de()
 		DE_MAIN='xfce4'
 		DE_EXTPKG='spectacle xterm'
 
-    sleep 2
+    sleep_clear 1
     setup_display_manager
     sleep_clear 1
 
