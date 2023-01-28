@@ -1504,11 +1504,7 @@ EOF
       mkdir -p "$CHROOT/boot/grub"
     fi
 
-    if [ $DUALBOOT = $TRUE ]
-    then
-      chroot $CHROOT pacman -S os-prober --noconfirm --overwrite='*' --needed \
-        > $VERBOSE 2>&1
-    fi
+    chroot $CHROOT pacman -S os-prober --noconfirm --overwrite='*' --needed \
 
     if [ $LUKS = $TRUE ]
     then
@@ -1520,7 +1516,7 @@ EOF
       "$CHROOT/etc/default/grub"
 
     sed -i 's/#GRUB_COLOR_/GRUB_COLOR_/g' "$CHROOT/etc/default/grub"
-    sed -i "s/#GRUB_DISABLE_OS_PROBER/GRUB_DISABLE_OS_PROBER/g" "$CHROOT/etc/pacman.conf"
+    sed -i "s/#GRUB_DISABLE_OS_PROBER/GRUB_DISABLE_OS_PROBER/g" "/mnt/etc/default/grub"
 
     printf "\n"
     printf "[+] Running grub-install\n\n"
@@ -1917,8 +1913,8 @@ disable_sign_check1()
 	title 'Pacman Settings > Signature Check (Live environment)'
 	wprintf '[+] Disabling signature check'
 	printf "\n\n"
-	      sed -i "s/Required DatabaseOptional/Never/g" "/etc/pacman.conf"
-        sed -i "s/LocalFileSigLevel/#LocalFileSigLevel/g" "/etc/pacman.conf"
+	      sed -i "s/Required DatabaseOptional/Never/" "/etc/pacman.conf"
+        sed -i "s/LocalFileSigLevel/#LocalFileSigLevel/" "/etc/pacman.conf"
 
   return $SUCCESS
 
@@ -1931,18 +1927,18 @@ disable_sign_check2()
 	wprintf '[+] Setting up signature check'
 	printf "\n\n"
 
-	if [ "$RESTORESIGN" = "FALSE" ]
+	if [ "$SIGNCK" = "FALSE" ]
 	then
   printf "[+] Disabling signature check"
-	      sed -i "s/Required DatabaseOptional/Never/g" "/mnt/etc/pacman.conf"
-        sed -i "s/LocalFileSigLevel/#LocalFileSigLevel/g" "/mnt/etc/pacman.conf"
+	      sed -i "s/Required DatabaseOptional/Never/" "/mnt/etc/pacman.conf"
+        sed -i "s/LocalFileSigLevel/#LocalFileSigLevel/" "/mnt/etc/pacman.conf"
 	fi
 
-	if [ "$RESTORESIGN" = "TRUE" ]
+	if [ "$SIGNCK" = "TRUE" ]
 	then
 		printf "[+] Restoring default settings"
-	      sed -i "s/Never/Required DatabaseOptional/g" "/mnt/etc/pacman.conf"
-        sed -i "s/#LocalFileSigLevel/LocalFileSigLevel/g" "/mnt/etc/pacman.conf"
+	      sed -i "s/Never/Required DatabaseOptional/" "/mnt/etc/pacman.conf"
+        sed -i "s/#LocalFileSigLevel/LocalFileSigLevel/" "/mnt/etc/pacman.conf"
 	fi
 
 	return $SUCCESS
@@ -1988,8 +1984,7 @@ select_de()
 	1. KDE Plasma
 	2. GNOME
 	3. LXDE
-  4. XFCE
-	\n"
+  4. XFCE\n"
 
 	wprintf '[?] Choose Desktop Environment: '
 	read -r DE
@@ -2680,7 +2675,6 @@ main()
   # hard drive
   get_hd_devs
   ask_hd_dev
-  ask_dualboot
   sleep_clear 1
   umount_filesystems 'harddrive'
   sleep_clear 1
