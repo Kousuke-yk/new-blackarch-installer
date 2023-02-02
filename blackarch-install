@@ -4,12 +4,12 @@
 # blackarch-installer - Official Installer for BlackArch Linux                 #
 #                                                                              #
 # AUTHOR                                                                       #
-# noptrix@nullsecurity.net                                                     #
+# Kousuke                                                     #
 #                                                                              #
 ################################################################################
 
 # blackarch-installer version
-VERSION="4.1"
+VERSION="4.2"
 
 # path to blackarch-installer
 BI_PATH='/usr/share/blackarch-installer'
