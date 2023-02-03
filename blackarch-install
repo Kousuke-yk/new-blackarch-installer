@@ -2421,7 +2421,7 @@ fix_osname()
   
   sed -i "s/Arch/BlackArch/" "/mnt/etc/lsb-release"
 
-return $SUCCESS
+  return $SUCCESS
 }
 
 # https://youtu.be/29VbPzcawv8
