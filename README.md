@@ -80,8 +80,12 @@ BlackArchのツールに対して発生したトラブルに対するサポー�
 4. `blackarch-install`を実行する
 ```
 ~# blackarch-install
-``
+```
 
+#### バージョン
+4.2
+- UIのバグを修正
+- インストール後にneofetchでBlackArchと表示されない問題を修正
 
 #### クレジット
 原作者: noptrix
