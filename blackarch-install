@@ -2419,8 +2419,7 @@ fix_osname()
   wprintf '[+] Updating OS information'
   printf "\n\n"
   
-  cat /mnt/etc/os-release | cat <(curl "https://raw.githubusercontent.com/Kousuke-yk/new-blackarch-installer/main/os-release") - > /mnt/etc/os-release
-  cat /mnt/etc/arch-release | cat <(curl "https://raw.githubusercontent.com/Kousuke-yk/new-blackarch-installer/main/arch-release") - > /mnt/etc/arch-release
+  sed -i "s/Arch/BlackArch/" "/mnt/etc/lsb-release"
 
 return $SUCCESS
 }
