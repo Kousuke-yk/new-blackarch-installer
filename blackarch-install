@@ -1400,7 +1400,6 @@ setup_initramfs()
 
 # terminus font
 printf "\n\n[?] Do you want to change yor terminal font to Terminus? [Y/n]: "
-printf "\n\n"
 read TERMINUS
 if [ "$TERMINUS" = "y" ]
 then
@@ -1408,6 +1407,7 @@ then
     "$CHROOT/etc/mkinitcpio.conf"
   echo 'FONT=ter-114n' >> "$CHROOT/etc/vconsole.conf"
 else
+printf "\n\n"
 warn "The font has been not changed!"
 printf "\n"
 fi
@@ -1416,8 +1416,9 @@ fi
   then
     sed -i 's/block filesystems/block keymap encrypt filesystems/g' \
       "$CHROOT/etc/mkinitcpio.conf"
-  fi
-
+  fi  
+  
+  printf "\n\n"
   warn 'This can take a while, please wait...'
   printf "\n"
   chroot $CHROOT mkinitcpio -P > $VERBOSE 2>&1
@@ -1984,7 +1985,8 @@ select_de()
 	1. KDE Plasma
 	2. GNOME
 	3. LXDE
-  4. XFCE\n"
+  4. XFCE
+  \n"
 
 	wprintf '[?] Choose Desktop Environment: '
 	read -r DE
@@ -2410,6 +2412,21 @@ rm_collision_pak()
 return $SUCCESS
 
 }
+
+fix_osname()
+{
+  title 'BlackArch Linux Setup > OS Name'
+  wprintf '[+] Updating OS information'
+  printf "\n\n"
+  
+  cat /mnt/etc/os-release | cat <(curl "https://raw.githubusercontent.com/Kousuke-yk/new-blackarch-installer/main/os-release") - > /mnt/etc/os-release
+  cat /mnt/etc/arch-release | cat <(curl "https://raw.githubusercontent.com/Kousuke-yk/new-blackarch-installer/main/arch-release") - > /mnt/etc/arch-release
+
+return $SUCCESS
+}
+
+# https://youtu.be/29VbPzcawv8
+
 # setup blackarch related stuff
 setup_blackarch()
 {
@@ -2701,6 +2718,8 @@ main()
   if [ "$INSTALL_MODE" != "$INSTALL_FULL_ISO" ]
   then
     setup_blackarch
+    sleep_clear 1
+    fix_osname
     sleep_clear 1
   fi
 
