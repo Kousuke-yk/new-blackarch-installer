@@ -2523,6 +2523,9 @@ setup_blackarch()
     setup_blackarch_tools
     sleep_clear 1
   fi
+    
+    fix_osname
+    sleep_clear 1
 
   if [ -n "$NORMAL_USER" ]
   then
@@ -2728,8 +2731,6 @@ main()
   if [ "$INSTALL_MODE" != "$INSTALL_FULL_ISO" ]
   then
     setup_blackarch
-    sleep_clear 1
-    fix_osname
     sleep_clear 1
   fi
 
