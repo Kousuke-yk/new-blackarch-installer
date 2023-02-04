@@ -2418,8 +2418,19 @@ fix_osname()
   title 'BlackArch Linux Setup > OS Name'
   wprintf '[+] Updating OS information'
   printf "\n\n"
-  
+  chroot /mnt pacman -S neofetch --noconfirm
+  printf "\n\n"
+  chroot /mnt neofetch
+  printf "\n\n"
+  chroot /mnt pacman -S lsb-release --noconfirm
+  printf "\n\n"
+  chroot /mnt neofetch
   sed -i "s/Arch/BlackArch/" "/mnt/etc/lsb-release"
+  printf "\n\n"
+
+  chroot /mnt neofetch
+  sleep 1
+
 
   return $SUCCESS
 }
