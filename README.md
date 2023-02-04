@@ -6,7 +6,7 @@ New BlackArch Linux Installerは、[BlackArch Installer](https://github.com/Blac
 このスクリプトは、あくまでBlackArch Linux自体のインストールを提供するまでです。
 BlackArchのツールに対して発生したトラブルに対するサポートはありません。
 
-このスクリプトの使用には、年齢制限などはありません。年齢性別問わずご自由にお使いください！
+このスクリプトの使用には、年齢制限などはありません。年齢性別問わずご自由にお使いください
 
 作者はアノニマスやクラッカーではありません。
 
@@ -82,8 +82,16 @@ BlackArchのツールに対して発生したトラブルに対するサポー�
 ~# blackarch-install
 ```
 
+#### Arch ISOで実行するには
+このインストーラーはBlackArch ISOだけではなく、Arch ISOで実行することもできます。
+同封のsetup.shを使用して、簡単に環境構築をします
+```
+~# chmod 777 ./setup.sh
+~# ./setup.sh
+```
+
 #### バージョン
-4.2
+4.4
 - UIのバグを修正
 - インストール後にneofetchでBlackArchと表示されない問題を修正
 
