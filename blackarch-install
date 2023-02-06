@@ -2350,7 +2350,6 @@ ask_ba_tools_setup()
   return $SUCCESS
 }
 
-
 # setup blackarch tools from repository (binary) or via blackman (source)
 setup_blackarch_tools()
 {
