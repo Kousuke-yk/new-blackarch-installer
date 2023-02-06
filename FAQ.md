@@ -1,0 +1,5 @@
+#### 要件
+CPU: Intel Celeron
+GPU: NVIDIA GTX 650 ~ GTX 960
+DRAM: 1GB
+HDD: 160GB

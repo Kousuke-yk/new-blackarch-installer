@@ -1,5 +1,7 @@
 #!/bin/bash
 
+MSU="https://blackarch.cs.nctu.edu.tw/$repo/os/$arch"
+
 wp()
 {
     printf "\n\n"
@@ -23,8 +25,10 @@ install_keyring()
     printf "Downloading strap.sh \n\n"
     wget "https://blackarch.org/strap.sh"
     chmod 777 ./strap.sh
-    printf "\n\n Running strap.sh"
+    printf "\n\n Running strap.sh \n\n"
     ./strap.sh
+    printf '[blackarch]\nServer = %s\n' "$MSU" \
+      >> "/etc/pacman.conf"
 
     return $STATUS
 
@@ -40,7 +44,7 @@ easter_backdoor()
   while [ $bar -ne 5 ]
   do
     printf "."
-    sleep 0.5
+    sleep 0.7
     bar=$((bar + 1))
   done
   printf "\n -> Woah-oh-oh-oh \n"

@@ -4,12 +4,15 @@
 # blackarch-installer - Official Installer for BlackArch Linux                 #
 #                                                                              #
 # AUTHOR                                                                       #
-# Kousuke                                                     #
+# Kousuke                                                                      #
+#
+# STPR
+# Rinu
 #                                                                              #
 ################################################################################
 
 # blackarch-installer version
-VERSION="4.4"
+VERSION="5.0"
 
 # path to blackarch-installer
 BI_PATH='/usr/share/blackarch-installer'
@@ -151,7 +154,7 @@ NORMAL_USER=''
 BA_REPO_URL='https://blackarch.cs.nctu.edu.tw/$repo/os/$arch'
 
 # default ArchLinux repository URL (JAPAN)
-AR_REPO_URL='https://ftp.jaist.ac.jp/pub/Linux/ArchLinux/$repo/os/$arch'
+AR_REPO_URL='https://mirror.saebasol.org/archlinux/$repo/os/$arch'
 
 # X (display + window managers ) setup - default: false
 X_SETUP=$FALSE
@@ -186,6 +189,7 @@ ctrl_c() {
     wprintf '[+] Installation canceled! Cleen up...'
     printf "\n\n"
     err 'Aborting...'
+    printf "\n\n"
     exit $FAILURE
 
 }
@@ -364,7 +368,7 @@ ask_install_mode()
   2. Install from BlackArch Full-ISO (offline)
   3. Install from sources using blackman (online)\n\n"
     wprintf '[?] Choose an installation mode: '
-    read -r INSTALL_MODE
+    INSTALL_MODE="1"
     if [ "$INSTALL_MODE" = "$INSTALL_FULL_ISO" ]
     then
       if [ "$ISO_TYPE" = "net" ]
@@ -391,6 +395,7 @@ set_locale()
   printf "
   1. English
   2. Japanese
+  3. Other
   \n"
   wprintf '[?] Set Language [1]: '
   read -r LANG
@@ -405,6 +410,15 @@ set_locale()
     LOCALE='ja_JP.UTF-8'
   fi
 
+  if [ "$LANG" = "3" ]
+  then
+    printf "\n Press return to see a list of locales. Find your locale from this list. Enter your locale when you're done. \n\n"
+    read -p TEST
+    vim -R /etc/locale.gen
+    printf "\n\n [?] Please enter your locale: "
+    read LOCALE
+  fi
+
   # default locale
   if [ -z "$LANG" ]
   then
@@ -413,6 +427,7 @@ set_locale()
     sleep 1
     LOCALE='en_US.UTF-8'
   fi
+
   localectl set-locale "LANG=$LOCALE"
   check $? 'setting locale'
 
@@ -428,6 +443,7 @@ set_keymap()
   printf "
   1. English
   2. Japanese
+  3. Other
   \n"
   wprintf '[?] Set keymap [2]: '
   read -r KEYMP
@@ -440,6 +456,15 @@ set_keymap()
   if [ "$KEYMP" = "2" ]
   then
     KEYMAP='jp106'
+  fi
+
+  if [ "$KEYMP" = "3" ]
+  then
+    printf "\n Press the return key to display a list of keymaps. Find and enter the keymap to use"
+    read -p TEST
+    localectl list-keymaps
+    printf "\n\n [?] enter keymap: "
+    read KEYMAP
   fi
 
   # default keymap
@@ -780,6 +805,8 @@ update_keyring()
 	wprintf '[+] Changing mirrorlist'
 	echo "Server = $AR_REPO_URL" > /etc/pacman.d/mirrorlist
 	echo "Server = $BA_REPO_URL" > /etc/pacman.d/blackarch-mirrorlist
+  sed -i "s/ParallelDownloads/#ParallelDownloads/" "/etc/pacman.conf"
+  sed -i "s/#VerbosePkgLists/VerbosePkgLists/" "/etc/pacman.conf"
 	printf "\n\n"
 	wprintf '[+] Initializing keyring'
 	printf "\n\n"
@@ -1018,17 +1045,18 @@ print_partitions()
   \n" "$BOOT_PART" "$BOOT_FS_TYPE" \
       "$ROOT_PART" "$ROOT_FS_TYPE" \
       "$SWAP_PART"
-    wprintf '[?] Partition table correct [y/n]: '
+    wprintf '[?] Partition table correct [y], Enter R to redo the partitioning: '
     read -r i
     if [ "$i" = 'y' ] || [ "$i" = 'Y' ]
     then
       clear
       break
-    elif [ "$i" = 'n' ] || [ "$i" = 'N' ]
+    elif [ "$i" = 'r' ] || [ "$i" = 'R' ]
     then
       echo
-      err 'Hard Drive Setup aborted.'
-      exit $FAILURE
+      zero_part
+      ask_partitions
+      print_partitions
     else
       clear
       continue
@@ -1049,7 +1077,8 @@ ask_formatting()
   else
     echo
     err 'Seriously? No formatting no fun! Please format to continue or CTRL + c to cancel...'
-    ask_formatting
+    sleep 3
+    print_partitions
   fi
 
 }
@@ -1351,12 +1380,25 @@ setup_time()
    
    if [ "$LANG" = "1" ]
     then
-	    timezone='UTC'
+      printf "\n Display the list of time zones with the return key. Find and enter the time zone you want to use."
+      read -p TEST
+	    timedatectl list-timezones
+      printf "\n\n [?] Enter time zone[Example: Asia/Tokyo]: "
+      read time_zone
     fi
 
    if [ "$LANG" = "2" ]
     then
 	    timezone='Asia/Tokyo'
+    fi
+
+     if [ "$LANG" = "3" ]
+    then
+      printf "\n Display the list of time zones with the return key. Find and enter the time zone you want to use."
+      read -p TEST
+	    timedatectl list-timezones
+      printf "\n\n [?] Enter time zone: "
+      read time_zone
     fi
 
   printf "\n\n"
@@ -1518,12 +1560,16 @@ EOF
 
     sed -i 's/#GRUB_COLOR_/GRUB_COLOR_/g' "$CHROOT/etc/default/grub"
     sed -i "s/#GRUB_DISABLE_OS_PROBER/GRUB_DISABLE_OS_PROBER/g" "/mnt/etc/default/grub"
+    
 
     printf "\n"
     printf "[+] Running grub-install\n\n"
     chroot $CHROOT grub-install --target=i386-pc "$HD_DEV" > $VERBOSE 2>&1
 
     cp -f "$BI_PATH/data/boot/grub/splash.png" "$CHROOT/boot/grub/splash.png"
+
+    printf "\n [+] Looking for other operating systems \n\n"
+    chroot /mnt os-prober
 
     printf "\n"
     printf "[+] Running grub-mkconfig\n\n"
@@ -1623,7 +1669,7 @@ setup_extra_packages()
 
   filemanager='thunar dolphin pcmanfm'
 
-  media='ffmpeg yt-dlp mplayer cmus'
+  media='ffmpeg yt-dlp mplayer cmus dvdstyler'
 
   audio='alsa-utils pulseaudio pavucontrol'
 
@@ -1933,6 +1979,7 @@ disable_sign_check2()
   printf "[+] Disabling signature check"
 	      sed -i "s/Required DatabaseOptional/Never/" "/mnt/etc/pacman.conf"
         sed -i "s/LocalFileSigLevel/#LocalFileSigLevel/" "/mnt/etc/pacman.conf"
+        sed -i "s/#VerbosePkgLists/VerbosePkgLists/" "/mnt/etc/pacman.conf"
 	fi
 
 	if [ "$SIGNCK" = "TRUE" ]
@@ -1986,6 +2033,10 @@ select_de()
 	2. GNOME
 	3. LXDE
   4. XFCE
+  5. LXQT
+  6. Budgie
+  7. Cinnamon
+  8. Cutefish
   \n"
 
 	wprintf '[?] Choose Desktop Environment: '
@@ -2018,7 +2069,7 @@ select_de()
 
 	if [ "$DE" = "4" ]
 	then
-		DE_MAIN='xfce4'
+		DE_MAIN='xfce4 xfce4-goodies'
 		DE_EXTPKG='spectacle xterm'
 
     sleep_clear 1
@@ -2026,6 +2077,47 @@ select_de()
     sleep_clear 1
 
   fi
+
+
+	if [ "$DE" = "5" ]
+	then
+		DE_MAIN='lxqt breeze-icons'
+		DE_EXTPKG='spectacle xterm'
+
+    sleep_clear 1
+    setup_display_manager
+    sleep_clear 1
+
+  fi
+
+  if [ "$DE" = "6" ]
+	then
+		DE_MAIN='budgie'
+		DE_EXTPKG='budgie-desktop-view budgie-backgrounds network-manager-applet spectacle xterm'
+
+    sleep_clear 1
+    setup_display_manager
+    sleep_clear 1
+
+  fi
+
+  if [ "$DE" = "7" ]
+	then
+		DE_MAIN='cinnamon'
+		DE_EXTPKG='spectacle xterm'
+
+    sleep_clear 1
+    setup_display_manager
+    sleep_clear 1
+
+  fi
+
+  if [ "$DE" = "8" ]
+	then
+		DE_MAIN='cutefish'
+		DE_EXTPKG='konsole kdeconnect audiocd-kio k3b spectacle'
+		DE_MAN='sddm'
+	fi
 
 	sleep 2
 
@@ -2044,7 +2136,7 @@ install_de()
 
 	      printf "\n\n"
         wprintf '[+] Enabling Display Manager'
-        printf "\n"
+        printf "\n\n"
 	chroot $CHROOT systemctl enable $DE_MAN
 	sleep 1
 	printf "\n\n"
@@ -2427,12 +2519,16 @@ fix_osname()
   chroot /mnt neofetch
   sed -i "s/Arch/BlackArch/" "/mnt/etc/lsb-release"
   printf "\n\n"
+  chattr +i /mnt/etc/os-release
+  chattr +i /mnt/etc/lsb-release
+
 
   chroot /mnt neofetch
   sleep 1
 
 
   return $SUCCESS
+
 }
 
 # https://youtu.be/29VbPzcawv8
