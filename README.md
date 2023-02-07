@@ -82,13 +82,6 @@ BlackArchのツールに対して発生したトラブルに対するサポー�
 ~# blackarch-install
 ```
 
-#### Arch ISOで実行するには
-このインストーラーはBlackArch ISOだけではなく、Arch ISOで実行することもできます。
-同封のsetup.shを使用して、簡単に環境構築をします。
-```
-~# chmod 777 ./setup.sh
-~# ./setup.sh
-```
 
 #### バージョン
 4.4
