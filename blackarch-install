@@ -12,7 +12,7 @@
 ################################################################################
 
 # blackarch-installer version
-VERSION="5.0"
+VERSION="5.1"
 
 # path to blackarch-installer
 BI_PATH='/usr/share/blackarch-installer'
@@ -412,8 +412,8 @@ set_locale()
 
   if [ "$LANG" = "3" ]
   then
-    printf "\n Press return to see a list of locales. Find your locale from this list. Enter your locale when you're done. \n\n"
-    read -p TEST
+    printf "\n\n"
+    read -p "Press return to see a list of locales. Find your locale from this list. Enter your locale when you're done."
     vim -R /etc/locale.gen
     printf "\n\n [?] Please enter your locale: "
     read LOCALE
@@ -460,8 +460,8 @@ set_keymap()
 
   if [ "$KEYMP" = "3" ]
   then
-    printf "\n Press the return key to display a list of keymaps. Find and enter the keymap to use"
-    read -p TEST
+    printf "\n\n"
+    read -p "Press the return key to display a list of keymaps. Find and enter the keymap to use"
     localectl list-keymaps
     printf "\n\n [?] enter keymap: "
     read KEYMAP
@@ -1380,8 +1380,8 @@ setup_time()
    
    if [ "$LANG" = "1" ]
     then
-      printf "\n Display the list of time zones with the return key. Find and enter the time zone you want to use."
-      read -p TEST
+      printf "\n"
+      read -p "Display the list of time zones with the return key. Find and enter the time zone you want to use."
 	    timedatectl list-timezones
       printf "\n\n [?] Enter time zone[Example: Asia/Tokyo]: "
       read time_zone
@@ -1394,8 +1394,8 @@ setup_time()
 
      if [ "$LANG" = "3" ]
     then
-      printf "\n Display the list of time zones with the return key. Find and enter the time zone you want to use."
-      read -p TEST
+      printf "\n"
+      read -p "Display the list of time zones with the return key. Find and enter the time zone you want to use."
 	    timedatectl list-timezones
       printf "\n\n [?] Enter time zone: "
       read time_zone
@@ -2029,14 +2029,14 @@ select_de()
 	wprintf '[?] Please select Desktop environment'
 	printf "\n\n"
 	printf "
-	1. KDE Plasma
-	2. GNOME
-	3. LXDE
-  4. XFCE
-  5. LXQT
-  6. Budgie
-  7. Cinnamon
-  8. Cutefish
+1. KDE Plasma
+2. GNOME
+3. LXDE
+4. XFCE
+5. LXQT
+6. Budgie
+7. Cinnamon
+8. Cutefish
   \n"
 
 	wprintf '[?] Choose Desktop Environment: '
@@ -2518,9 +2518,8 @@ fix_osname()
   chroot /mnt neofetch
   sed -i "s/Arch/BlackArch/" "/mnt/etc/lsb-release"
   printf "\n\n"
-  chattr +i /mnt/etc/os-release
-  chattr +i /mnt/etc/lsb-release
-
+  chroot /mnt chattr +i /etc/os-release
+  chroot /mnt chattr +i /etc/lsb-release
 
   chroot /mnt neofetch
   sleep 1
