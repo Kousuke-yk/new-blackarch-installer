@@ -600,14 +600,17 @@ update_pacman()
 # ask user for hostname
 ask_hostname()
 {
-  while [ -z "$HOST_NAME" ]
-  do
     title 'Network Setup > Hostname'
     wprintf '[?] Set your hostname: '
     read -r HOST_NAME
-  done
 
-  return $SUCCESS
+    if [ -z "HOST_NAME" ]
+    then
+    sleep_clear
+    ask_hostname
+    else
+    return $SUCCESS
+    fi
 }
 
 # get available network interfaces
