@@ -12,7 +12,7 @@
 ################################################################################
 
 # blackarch-installer version
-VERSION="5.2"
+VERSION="5.3"
 
 # path to blackarch-installer
 BI_PATH='/usr/share/blackarch-installer'
@@ -733,9 +733,13 @@ net_conf_auto()
   printf "\n\n"
 
   dhcpcd "$opts" -i "$NET_IF" > $VERBOSE 2>&1
-
-  sleep 10
-
+  printf "\n\n Waiting for 10 seconds"
+  while [ $bar -ne 10 ]
+  do
+    wprintf "."
+    sleep 1
+    bar=$((bar + 1))
+  done
   return $SUCCESS
 }
 
@@ -1048,7 +1052,7 @@ print_partitions()
   \n" "$BOOT_PART" "$BOOT_FS_TYPE" \
       "$ROOT_PART" "$ROOT_FS_TYPE" \
       "$SWAP_PART"
-    wprintf '[?] Partition table correct [y], Enter R to redo the partitioning: '
+    wprintf '[?] Partition table correct [y], Enter [R] to redo the partitioning: '
     read -r i
     if [ "$i" = 'y' ] || [ "$i" = 'Y' ]
     then
@@ -1086,6 +1090,7 @@ ask_formatting()
     echo
     err 'Seriously? No formatting no fun! Please format to continue or CTRL + c to cancel...'
     sleep 3
+    clear
     print_partitions
   fi
 
@@ -2044,7 +2049,8 @@ select_de()
  5. LXQT
  6. Budgie
  7. Cinnamon
- 8. Cutefish \n"
+ 8. Cutefish
+ \n\n"
 
 	wprintf '[?] Choose Desktop Environment: '
 	read -r DE
@@ -2524,7 +2530,7 @@ fix_osname()
   printf "\n\n"
   chroot /mnt chattr +i /usr/lib/os-release
   chroot /mnt chattr +i /etc/lsb-release
-  chroot /mnt chattr +i /etc/os-release
+  chroot /mnt chattr +i /etc/arch-release
 
   chroot /mnt neofetch
   sleep 1
