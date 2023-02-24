@@ -12,7 +12,7 @@
 ################################################################################
 
 # blackarch-installer version
-VERSION="5.4"
+VERSION="5.5"
 
 # path to blackarch-installer
 BI_PATH='/usr/share/blackarch-installer'
@@ -604,7 +604,7 @@ ask_hostname()
     wprintf '[?] Set your hostname: '
     read -r HOST_NAME
 
-    if [ -z "HOST_NAME" ]
+    if [ -z "$HOST_NAME" ]
     then
     sleep_clear
     ask_hostname
@@ -734,6 +734,7 @@ net_conf_auto()
 
   dhcpcd "$opts" -i "$NET_IF" > $VERBOSE 2>&1
   printf "\n\n Waiting for 10 seconds"
+  bar=0
   while [ $bar -ne 10 ]
   do
     wprintf "."
@@ -1429,6 +1430,7 @@ sync_clock()
 	title 'Live Environment > Other settings'
 	wprintf '[+] Setting up clock'
 	timedatectl set-ntp true
+  sleep 3
   hwclock --systohc
 
 	return $SUCCESS
@@ -2052,7 +2054,7 @@ select_de()
  8. Cutefish
  \n\n"
 
-	wprintf '[?] Choose Desktop Environment: '
+	wprintf '[?] Choose: '
 	read -r DE
 
 	if [ "$DE" = "1" ]
@@ -2090,7 +2092,6 @@ select_de()
     sleep_clear 1
 
   fi
-
 
 	if [ "$DE" = "5" ]
 	then
@@ -2132,7 +2133,6 @@ select_de()
 	sleep 2
 
 	return $SUCCESS
-
 }
 
 # install desktop environment
@@ -2155,8 +2155,6 @@ install_de()
 
 	return $SUCCESS
 }
-
-
 
 # setup display manager
 setup_display_manager()
@@ -2363,63 +2361,14 @@ ask_ba_tools_setup()
 # setup blackarch tools from repository (binary) or via blackman (source)
 setup_blackarch_tools()
 {
-  foo=5
-
-  if [ "$VERBOSE" = '/dev/null' ]
-  then
-    noconfirm='--noconfirm'
-  fi
-
   title 'BlackArch Linux Setup > Tools'
 
   wprintf '[+] Installing BlackArch Linux packages (grab a coffee)'
   printf "\n\n"
-
-  if [ "$INSTALL_MODE" = $INSTALL_REPO ]
-  then
-    wprintf "[+] All available BlackArch tools groups:\n\n"
-    printf "    > blackarch blackarch-anti-forensic blackarch-automation
-    > blackarch-backdoor blackarch-binary blackarch-bluetooth blackarch-code-audit
-    > blackarch-cracker blackarch-crypto blackarch-database blackarch-debugger
-    > blackarch-decompiler blackarch-defensive blackarch-disassembler
-    > blackarch-dos blackarch-drone blackarch-exploitation blackarch-fingerprint
-    > blackarch-firmware blackarch-forensic blackarch-fuzzer blackarch-hardware
-    > blackarch-honeypot blackarch-ids blackarch-keylogger blackarch-malware
-    > blackarch-misc blackarch-mobile blackarch-networking blackarch-nfc
-    > blackarch-packer blackarch-proxy blackarch-recon blackarch-reversing
-    > blackarch-scanner blackarch-sniffer blackarch-social blackarch-spoof
-    > blackarch-threat-model blackarch-tunnel blackarch-unpacker blackarch-voip
-    > blackarch-webapp blackarch-windows blackarch-wireless \n\n"
-    wprintf "[?] BlackArch groups to install (space for multiple) [blackarch]: "
-    read -r BA_GROUPS
-    printf "\n"
-    warn 'This can take a while, please wait...'
-    if [ -z "$BA_GROUPS" ]
-    then
-      printf "\n"
-      check_space
-      printf "\n\n"
-      chroot $CHROOT pacman -S --needed --disable-download-timeout --noconfirm --overwrite='*' blackarch \
-        > $VERBOSE 2>&1
-    else
-      chroot $CHROOT pacman -S --needed --disable-download-timeout --noconfirm --overwrite='*' "$BA_GROUPS" \
-        > $VERBOSE 2>&1
-    fi
-  else
-    warn 'Installing all tools from source via blackman can take hours'
-    printf "\n"
-    wprintf '[+] <Control-c> to abort ... '
-    while [ $foo -gt 0 ]
-    do
-      wprintf "$foo "
-      sleep 1
-      foo=$((foo - 1))
-    done
-    printf "\n"
-    chroot $CHROOT pacman -S --needed --overwrite='*' $noconfirm blackman \
-      > $VERBOSE 2>&1
-    chroot $CHROOT blackman -a > $VERBOSE 2>&1
-  fi
+  warn 'This can take a while, please wait...'
+  printf "\n\n"
+  
+  chroot $CHROOT pacman -S --needed --disable-download-timeout --noconfirm --overwrite='*' blackarch
 
   return $SUCCESS
 }
@@ -2533,11 +2482,9 @@ fix_osname()
   chroot /mnt chattr +i /etc/arch-release
 
   chroot /mnt neofetch
-  sleep 1
-
-
+  sleep 3
+  
   return $SUCCESS
-
 }
 
 # https://youtu.be/29VbPzcawv8
