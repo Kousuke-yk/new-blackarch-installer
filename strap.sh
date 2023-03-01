@@ -9,7 +9,7 @@ wp1()
 
 wp2()
 {
-	printf "WARNING: $@ \n"
+	printf "WARNING: $@ \n\n"
 }
 
 install()
@@ -40,6 +40,22 @@ else
 	fi
 }
 
+finish()
+{
+  bar=0
+  printf "\n\n [+] BlackArch Linux Tools installation successfull!"
+  printf "\n\n"
+
+  printf 'Yo n00b, b4ckd00r1ng y0ur sy5t3m n0w '
+  while [ $bar -ne 5 ]
+  do
+    printf "."
+    sleep 1
+    bar=$((bar + 1))
+  done
+  printf " >> HACK THE PLANET! D00R THE PLANET! <<"
+  printf "\n\n"
+}
 
 update_initramfs()
 {

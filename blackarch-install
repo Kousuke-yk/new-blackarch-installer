@@ -12,7 +12,7 @@
 ################################################################################
 
 # blackarch-installer version
-VERSION="5.5"
+VERSION="5.7"
 
 # path to blackarch-installer
 BI_PATH='/usr/share/blackarch-installer'
@@ -1059,20 +1059,13 @@ print_partitions()
     then
       clear
       break
+      ask_formatting
     elif [ "$i" = 'r' ] || [ "$i" = 'R' ]
     then
-      echo
-      clear
-      zero_part
-      clear
-      get_partition_label
-      clear
-      ask_partitions
-      clear
-      print_partitions
-      return $SUCCESS
+    sleep_clear 1
+    partitionsetup
     else
-      clear
+    clear
       continue
     fi
     sleep_clear 1
@@ -1094,9 +1087,7 @@ ask_formatting()
     clear
     print_partitions
   fi
-
 }
-
 
 # create LUKS encrypted partition
 make_luks_partition()
@@ -1112,7 +1103,6 @@ make_luks_partition()
     > $VERBOSE 2>&1 || { clear ; err 'Could not LUKS format, trying again.'; make_luks_partition "$@"; }
 
 }
-
 
 # open LUKS partition
 open_luks_partition()
@@ -1323,7 +1313,7 @@ install_base_packages()
   printf "\n"
 
   pacstrap $CHROOT base base-devel btrfs-progs linux linux-firmware \
-    terminus-font terminus-font-ttf > $VERBOSE 2>&1
+    terminus-font terminus-font-ttf --disable-download-timeout
   printf "\n"
   wprintf '[+] Updating target pacman database...'
   printf "\n\n"
@@ -2142,7 +2132,7 @@ install_de()
 	wprintf '[+] Installing Desktop Environment'
 	printf "\n\n"
 
-	chroot $CHROOT pacman -S $DE_MAIN $DE_EXTPKG $DE_MAN --disable-download-timeout --noconfirm
+	chroot $CHROOT pacman -S $DE_MAIN $DE_EXTPKG $DE_MAN --disable-download-timeout --needed --noconfirm
 
 	      printf "\n\n"
         wprintf '[+] Enabling Display Manager'
@@ -2650,34 +2640,6 @@ run_update_initramfs()
 
 }
 
-
-# check if new version available. perform self-update and exit (DISABLED)
-self_updater()
-{
-  title 'Self Updater'
-  wprintf '[+] Checking for a new version of myself...'
-  printf "\n\n"
-
-  pacman -Syy > $VERBOSE 2>&1
-  repo="$(pacman -Ss blackarch-installer | head -1 | cut -d ' ' -f 2 |
-    cut -d '-' -f 1 | tr -d '.')0"
-  this="$(echo $VERSION | tr -d '.')0"
-
-  if [ "$this" -lt "$repo" ]
-  then
-    printf "\n\n"
-    warn 'A new version is available! Going to fuck, err, update myself.'
-    pacman -S --overwrite='*' --noconfirm blackarch-installer > $VERBOSE 2>&1
-    yes | pacman -Scc > $VERBOSE 2>&1
-    wprintf "\n[+] Updated successfully. Please restart the installer now!\n"
-    chmod +x /usr/share/blackarch-installer/blackarch-install
-    exit $SUCCESS
-  fi
-
-  return $SUCCESS
-}
-
-
 # controller and program flow
 main()
 {
@@ -2737,15 +2699,11 @@ main()
     check_inet_conn
     sleep_clear 1
 
-
     # truble fixing
     disable_sign_check1
     sleep_clear 1
     update_keyring
     sleep_clear 1
-
-    # self_updater (DISABLED)
-    # sleep_clear 1
 
     # pacman
     ask_mirror_arch
@@ -2755,6 +2713,8 @@ main()
   fi
 
   # hard drive
+  partitionsetup()
+  {
   get_hd_devs
   ask_hd_dev
   sleep_clear 1
@@ -2766,8 +2726,10 @@ main()
   get_partition_label
   ask_partitions
   print_partitions
-  ask_formatting
-  clear
+  }
+  
+  partitionsetup
+
   make_partitions
   clear
   mount_filesystems
@@ -2780,11 +2742,10 @@ main()
   sleep_clear 1
 
   # blackarch Linux
-  if [ "$INSTALL_MODE" != "$INSTALL_FULL_ISO" ]
-  then
-    setup_blackarch
-    sleep_clear 1
-  fi
+  
+  setup_blackarch
+  sleep_clear 1
+  
 
   # epilog
   SIGNCK='TRUE'
