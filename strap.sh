@@ -1,6 +1,4 @@
 #!/bin/sh
-LANG=1
-RINU=FALSE
 
 wp1()
 {
@@ -68,6 +66,7 @@ main()
 {
 	clear
 	signck '1'
+	clear
 	sleep 1
 	install
 	sleep 1

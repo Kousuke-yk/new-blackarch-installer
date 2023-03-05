@@ -11,6 +11,22 @@ FedoraやUbuntu、DebianなどのOSでは使用できません。
 
 - VirtualBoxやDockerなどでの動作は検証していません。
 
+### デプロイ方法
+#### 1
+Live DVDを起動し、ネットワークに接続します
+```
+# ip a
+# dhcpcd <Interface name>
+```
+
+#### 2
+スクリプトをダウンロードし、/binにコピーします。
+```
+# git clone https://github.com/Kousuke-yk/new-blackarch-installer.git
+# cd ./new-blackarch-installer
+# cp ./blackarch-install /bin
+
+```
 ### バージョン履歴
 #### 5.1
 - 起動モードはpacmanリポジトリ経由のネットインストールのみに絞られました。

@@ -12,7 +12,7 @@
 ################################################################################
 
 # blackarch-installer version
-VERSION="5.7"
+VERSION="5.8"
 
 # path to blackarch-installer
 BI_PATH='/usr/share/blackarch-installer'
@@ -24,9 +24,6 @@ FALSE=1
 # return codes
 SUCCESS=0
 FAILURE=1
-
-# signature check
-SIGNCK='FALSE'
 
 # verbose mode - default: verbose
 VERBOSE='/dev/stdout'
@@ -606,7 +603,7 @@ ask_hostname()
 
     if [ -z "$HOST_NAME" ]
     then
-    sleep_clear
+    sleep_clear 1
     ask_hostname
     else
     return $SUCCESS
@@ -1131,7 +1128,6 @@ make_swap_partition()
 
 }
 
-
 # make and format root partition
 make_root_partition()
 {
@@ -1170,7 +1166,6 @@ make_root_partition()
 
   return $SUCCESS
 }
-
 
 # make and format boot partition
 make_boot_partition()
@@ -1315,7 +1310,7 @@ install_base_packages()
   pacstrap $CHROOT base base-devel btrfs-progs linux linux-firmware \
     terminus-font terminus-font-ttf --disable-download-timeout
   printf "\n"
-  wprintf '[+] Updating target pacman database...'
+  wprintf '[+] Updating pacman database...'
   printf "\n\n"
   chroot $CHROOT pacman -Syy --noconfirm --overwrite='*' > $VERBOSE 2>&1
 
@@ -1358,7 +1353,6 @@ setup_fstab()
   return $SUCCESS
 }
 
-
 # setup locale and keymap
 setup_locale()
 {
@@ -1374,7 +1368,6 @@ setup_locale()
 
   return $SUCCESS
 }
-
 
 # setup timezone
 setup_time()
@@ -1446,18 +1439,14 @@ setup_initramfs()
   fi
 
 # terminus font
-printf "\n\n[?] Do you want to change yor terminal font to Terminus? [Y/n]: "
-read TERMINUS
-if [ "$TERMINUS" = "y" ]
-then
-  sed -i 's/keyboard fsck/keyboard fsck consolefont/g' \
-    "$CHROOT/etc/mkinitcpio.conf"
-  echo 'FONT=ter-114n' >> "$CHROOT/etc/vconsole.conf"
-else
-printf "\n\n"
-warn "The font has been not changed!"
-printf "\n"
-fi
+ if [ "$TERMINUS" = "y" ]
+ then
+ printf "\n\n[INFO] Terminus font is disabled. Skip..."
+ else
+   sed -i 's/keyboard fsck/keyboard fsck consolefont/g' \
+     "$CHROOT/etc/mkinitcpio.conf"
+   echo 'FONT=ter-114n' >> "$CHROOT/etc/vconsole.conf"
+ fi
 
   if [ $LUKS = $TRUE ]
   then
@@ -1784,15 +1773,14 @@ setup_base_system()
   setup_user "$NORMAL_USER"
   sleep_clear 1
 
-  if [ "$INSTALL_MODE" != "$INSTALL_FULL_ISO" ]
-  then
-    reinitialize_keyring
-    sleep_clear 1
-    disable_sign_check2
-    sleep_clear 1
-    setup_extra_packages
-    sleep_clear 1
-  fi
+  reinitialize_keyring
+  sleep_clear 1
+  
+  disable_sign_check2 TRUE
+  sleep_clear 1
+  
+  setup_extra_packages
+  sleep_clear 1
 
   setup_bootloader
   sleep_clear 1
@@ -1979,16 +1967,13 @@ disable_sign_check2()
 	wprintf '[+] Setting up signature check'
 	printf "\n\n"
 
-	if [ "$SIGNCK" = "FALSE" ]
+	if [ "$1" = "TRUE" ]
 	then
   printf "[+] Disabling signature check"
 	      sed -i "s/Required DatabaseOptional/Never/" "/mnt/etc/pacman.conf"
         sed -i "s/LocalFileSigLevel/#LocalFileSigLevel/" "/mnt/etc/pacman.conf"
         sed -i "s/#VerbosePkgLists/VerbosePkgLists/" "/mnt/etc/pacman.conf"
-	fi
-
-	if [ "$SIGNCK" = "TRUE" ]
-	then
+else
 		printf "[+] Restoring default settings"
 	      sed -i "s/Never/Required DatabaseOptional/" "/mnt/etc/pacman.conf"
         sed -i "s/#LocalFileSigLevel/LocalFileSigLevel/" "/mnt/etc/pacman.conf"
@@ -2748,7 +2733,6 @@ main()
   
 
   # epilog
-  SIGNCK='TRUE'
   disable_sign_check2
   sleep_clear 1
   run_update_initramfs
