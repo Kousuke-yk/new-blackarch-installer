@@ -315,7 +315,6 @@ confirm()
   return $SUCCESS
 }
 
-
 # print menu title
 title()
 {
@@ -325,7 +324,6 @@ title()
   return "${SUCCESS}"
 }
 
-
 # check for environment issues
 check_env()
 {
@@ -334,7 +332,6 @@ check_env()
     err 'pacman locked - Please remove /var/lib/pacman/db.lck'
   fi
 }
-
 
 # check user id
 check_uid()
@@ -346,7 +343,6 @@ check_uid()
 
   return $SUCCESS
 }
-
 
 # welcome and ask for installation mode
 ask_install_mode()
