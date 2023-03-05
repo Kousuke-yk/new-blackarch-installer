@@ -177,7 +177,6 @@ BOOT_MODE=''
 # check type of ISO (Full? netinst?)
 ISO_TYPE=''
 
-
 # Exit on CTRL + c
 ctrl_c() {
 
@@ -192,7 +191,6 @@ ctrl_c() {
 }
 
 trap ctrl_c 2
-
 
 # check exit status
 check()
