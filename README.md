@@ -25,7 +25,6 @@ Live DVDを起動し、ネットワークに接続します
 # git clone https://github.com/Kousuke-yk/new-blackarch-installer.git
 # cd ./new-blackarch-installer
 # cp ./blackarch-install /bin
-
 ```
 ### バージョン履歴
 #### 5.1

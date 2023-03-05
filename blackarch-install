@@ -1433,7 +1433,7 @@ setup_initramfs()
   fi
 
 # terminus font
- if [ "$TERMINUS" = "y" ]
+ if [ "$TERMINUS" = "FALSE" ]
  then
  printf "\n\n[INFO] Terminus font is disabled. Skip..."
  else
