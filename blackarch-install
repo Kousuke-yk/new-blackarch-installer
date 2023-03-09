@@ -377,6 +377,7 @@ ask_install_mode()
   return $SUCCESS
 }
 
+
 # set locale to use
 set_locale()
 {
@@ -410,6 +411,7 @@ set_locale()
     read LOCALE
   fi
 
+
   # default locale
   if [ -z "$LANG" ]
   then
@@ -424,6 +426,7 @@ set_locale()
 
   return $SUCCESS
 }
+
 
 # set keymap to use
 set_keymap()
@@ -457,6 +460,7 @@ set_keymap()
     printf "\n\n [?] enter keymap: "
     read KEYMAP
   fi
+
 
   # default keymap
   if [ -z "$KEYMP" ]
