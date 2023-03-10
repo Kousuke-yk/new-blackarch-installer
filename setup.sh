@@ -1,6 +1,7 @@
 #!/bin/sh
 # https://youtu.be/pKrCLXkTGPQ
 RINU=WANWANO
+BA_REPO_URL='https://blackarch.cs.nctu.edu.tw/$repo/os/$arch'
 
 
 msg()
@@ -16,19 +17,37 @@ slc()
 }
 
 
+env_setup()
+{
+    msg '[+] Setting up Live Environment'
+
+    printf "=> Breaking the signature check in the Live environment..."
+    sed -i "s/Required DatabaseOptional/Never/" "/etc/pacman.conf"
+    sed -i "s/LocalFileSigLevel/#LocalFileSigLevel/" "/etc/pacman.conf"
+    
+    msg '=> Install required packages...'
+    pacman -Syy archlinux-keyring git wget --noconfirm --needed
+
+    msg '=> Download and run strap.sh...'
+    wget http://blackarch.org/strap.sh
+    chmod 777 ./strap.sh
+    ./strap.sh
+    echo "Server = $BA_REPO_URL" > /etc/pacman.d/blackarch-mirrorlist
+    pacman -Syy
+
+    msg '=> Cloning and setting up the repository'
+    git clone https://github.com/Kousuke-yk/new-blackarch-installer
+    cd ./new-blackarch-installer
+
+}
+
+
 pak_setup()
 {
     msg '[+] Installing BlackArch Installer'
 
-    printf "=> Breaking the signature check in the Live environment..."
-    	sed -i "s/Required DatabaseOptional/Never/" "/etc/pacman.conf"
-        sed -i "s/LocalFileSigLevel/#LocalFileSigLevel/" "/etc/pacman.conf"
-
-    msg "=> Fetching files..."
-        wget http://blackarch.cs.nctu.edu.tw/blackarch/os/x86_64/blackarch-installer-1.2.22-1-any.pkg.tar.zst
-    
-    msg "=> Installing packages..."
-        pacman -U ./blackarch-installer-1.2.22-1-any.pkg.tar.zst --noconfirm
+    printf "=> Installing packages...\n\n"
+    pacman -S blackarch-installer --noconfirm
     
     msg "=> Overwriting file..."
     cp ./blackarch-install /bin
@@ -40,10 +59,14 @@ pak_setup()
 
 }
 
+
 setup()
 {
     clear
+    env_setup
+    slc 1
     pak_setup
 }
+
 
 setup

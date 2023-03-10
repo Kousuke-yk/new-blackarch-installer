@@ -801,6 +801,7 @@ check_inet_conn()
 
 }
 
+
 # live environment keyring is update
 update_keyring()
 {
@@ -816,6 +817,7 @@ update_keyring()
 	pacman -Syy archlinux-keyring blackarch-keyring --noconfirm
 	return $SUCCESS
 }
+
 
 # ask user for dualboot install
 ask_dualboot()
@@ -1061,7 +1063,6 @@ print_partitions()
     clear
       continue
     fi
-    sleep_clear 1
   done
 
   return $SUCCESS
@@ -2710,6 +2711,7 @@ main()
   }
   
   partitionsetup
+  sleep_clear 1
 
   ask_formatting
   sleep_clear 1

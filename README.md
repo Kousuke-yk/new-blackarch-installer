@@ -28,8 +28,9 @@ Live DVDを起動し、ネットワークに接続します
 ```
 
 ### Arch Linux ISOにデプロイする方法
-同封されているsetup.shを実行すると、自動で環境をセットアップします。
+setup.shを実行すると、自動で環境をセットアップします。
 ```
+# curl -O https://raw.githubusercontent.com/Kousuke-yk/new-blackarch-installer/main/setup.sh
 # chmod 777 ./setup.sh
 # ./setup.sh
 ```
