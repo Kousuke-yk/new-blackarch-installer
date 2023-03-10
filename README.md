@@ -4,7 +4,7 @@ New BlackArch Installerは、BlackArch Installerの非公式更新プロジェ�
 オリジナル版のバグ修正に加え、新しい機能などを追加し、オリジナルのBlackArch Installerよりも優れたインストーラーを目指します。
 
 ### 注意
-- このスクリプトはBlackArch Net Install ISO 2021-09-01でのみ動作します。
+- このスクリプトはBlackArch Net Install ISO 2021-09-01またはArch Linux Live ISOでのみ動作します。
 > Full ISOはサポートされていません。
 FedoraやUbuntu、DebianなどのOSでは使用できません。
 すでにインストールされているBlackArch / Arch上でこのスクリプトを実行しないでください。既存のシステムを破壊する恐れがあります。
@@ -61,4 +61,7 @@ setup.shを実行すると、自動で環境をセットアップします。
 
 #### strap.sh
 > ベースシステムをインストールしたあとにBlackArch Toolsをインストールする場合に使用します。
+
+#### setup.sh
+Arch Linux ISOでこのインストーラーを使用する場合、このスクリプトを実行すると簡単に環境構築ができます。
 
