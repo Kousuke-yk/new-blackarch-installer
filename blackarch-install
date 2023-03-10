@@ -1052,9 +1052,7 @@ print_partitions()
     read -r i
     if [ "$i" = 'y' ] || [ "$i" = 'Y' ]
     then
-      clear
       break
-      ask_formatting
     elif [ "$i" = 'r' ] || [ "$i" = 'R' ]
     then
     sleep_clear 1
@@ -1077,10 +1075,10 @@ ask_formatting()
     return $SUCCESS
   else
     echo
-    err 'Seriously? No formatting no fun! Please format to continue or CTRL + c to cancel...'
+    err 'Seriously? No formatting no fun! Please format to continue.'
     sleep 3
     clear
-    print_partitions
+    ctrl_c
   fi
 }
 
@@ -2331,7 +2329,7 @@ ask_ba_tools_setup()
   return $SUCCESS
 }
 
-# setup blackarch tools from repository (binary) or via blackman (source)
+# setup blackarch tools from repository
 setup_blackarch_tools()
 {
   title 'BlackArch Linux Setup > Tools'
@@ -2712,6 +2710,9 @@ main()
   }
   
   partitionsetup
+
+  ask_formatting
+  sleep_clear 1
 
   make_partitions
   clear

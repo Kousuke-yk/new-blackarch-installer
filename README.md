@@ -26,6 +26,14 @@ Live DVDを起動し、ネットワークに接続します
 # cd ./new-blackarch-installer
 # cp ./blackarch-install /bin
 ```
+
+### Arch Linux ISOにデプロイする方法
+同封されているsetup.shを実行すると、自動で環境をセットアップします。
+```
+# chmod 777 ./setup.sh
+# ./setup.sh
+```
+
 ### バージョン履歴
 #### 5.1
 - 起動モードはpacmanリポジトリ経由のネットインストールのみに絞られました。
