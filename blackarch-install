@@ -44,14 +44,6 @@ YELLOW="$(tput setaf 3)"
 BLINK="$(tput blink)"
 NC="$(tput sgr0)"
 
-# installation mode
-INSTALL_MODE=''
-
-# install modes
-INSTALL_REPO='1'
-INSTALL_FULL_ISO='2'
-INSTALL_BLACKMAN='3'
-
 # chosen locale
 LOCALE=''
 
@@ -1043,7 +1035,7 @@ ask_formatting()
     return $SUCCESS
   else
     echo
-    err 'Seriously? No formatting no fun! Please format to continue.'
+    err 'Seriously? No formatting no fun! Please format to continue...'
     sleep 3
     clear
     ctrl_c
@@ -2329,7 +2321,7 @@ setup_blackarch_tools()
 # add user to newly created groups
 update_user_groups()
 {
-  title 'BlackArch Linux Setup > User'
+  title '$OSNAME Setup > User'
 
   wprintf "[+] Adding user $user to groups and sudoers"
   printf "\n\n"
@@ -2564,8 +2556,10 @@ main()
   # do some ENV checks
   sleep_clear 0
   check_uid
-  check_env
   check_boot_mode
+
+  set_ostype
+  sleep_clear 0
 
   # locale
   set_locale
