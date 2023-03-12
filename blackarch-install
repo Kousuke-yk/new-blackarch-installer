@@ -12,7 +12,7 @@
 ################################################################################
 
 # blackarch-installer version
-VERSION="5.8"
+VERSION="6.0"
 
 # path to blackarch-installer
 BI_PATH='/usr/share/blackarch-installer'
@@ -148,7 +148,7 @@ NORMAL_USER=''
 # default BlackArch Linux repository URL (TAIWAN)
 #BA_REPO_URL='https://www.mirrorservice.org/sites/blackarch.org/blackarch/$repo/os/$arch'
 #BA_REPO_URL='https://blackarch.unixpeople.org/$repo/os/$arch'
-BA_REPO_URL='https://blackarch.cs.nctu.edu.tw/$repo/os/$arch'
+BA_REPO_URL='https://blackarch.cs.nycu.edu.tw/$repo/os/$arch'
 
 # default ArchLinux repository URL (JAPAN)
 AR_REPO_URL='https://mirror.saebasol.org/archlinux/$repo/os/$arch'
@@ -270,20 +270,6 @@ check_boot_mode()
 }
 
 
-# check type of iso
-check_iso_type()
-{
-  if [ "$(which dnsspider 2> /dev/null)" ]
-  then
-    ISO_TYPE='full'
-  else
-    ISO_TYPE='net'
-  fi
-
-  return $SUCCESS
-}
-
-
 # sleep and clear
 sleep_clear()
 {
@@ -344,39 +330,27 @@ check_uid()
   return $SUCCESS
 }
 
-# welcome and ask for installation mode
-ask_install_mode()
+set_ostype()
 {
-  while
-    [ "$INSTALL_MODE" != "$INSTALL_REPO" ] && \
-    [ "$INSTALL_MODE" != "$INSTALL_BLACKMAN" ] && \
-    [ "$INSTALL_MODE" != "$INSTALL_FULL_ISO" ]
-  do
-    title 'Welcome to the BlackArch Linux installer!'
-    wprintf '[+] Available installation modes:'
-    printf "\n
-  1. Install from BlackArch repository (online)
-  2. Install from BlackArch Full-ISO (offline)
-  3. Install from sources using blackman (online)\n\n"
-    wprintf '[?] Choose an installation mode: '
-    INSTALL_MODE="1"
-    if [ "$INSTALL_MODE" = "$INSTALL_FULL_ISO" ]
-    then
-      if [ "$ISO_TYPE" = "net" ]
-      then
-        err 'WTF, Full-ISO mode with Netinstall? Nope!'
-        sleep 3
-        sleep_clear 1
-        ask_install_mode
-        INSTALL_MODE=''
-      fi
-    fi
-    clear
-  done
+  title 'Environment > OS Type (BlackArch? Arch Linux?)'
+  wprintf '[+] Select OS'
+  printf "\n
+  1. BlackArch Linux
+  2. Arch Linux
+  \n"
 
-  return $SUCCESS
+  wprintf '[?] Choose: '
+  read OSTYPE
+
+  if [ "$OSTYPE" = "1" ]
+  then
+  BLACKARCH=TRUE
+  OSNAME='BlackArch Linux'
+  else
+  OSNAME='Arch Linux'
+  fi
+
 }
-
 
 # set locale to use
 set_locale()
@@ -387,7 +361,7 @@ set_locale()
   printf "
   1. English
   2. Japanese
-  3. Other
+  3. Other (Enter manually)
   \n"
   wprintf '[?] Set Language [1]: '
   read -r LANG
@@ -437,7 +411,7 @@ set_keymap()
   printf "
   1. English
   2. Japanese
-  3. Other
+  3. Other (Enter manually)
   \n"
   wprintf '[?] Set keymap [2]: '
   read -r KEYMP
@@ -601,8 +575,8 @@ ask_hostname()
 
     if [ -z "$HOST_NAME" ]
     then
-    sleep_clear 1
-    ask_hostname
+    warn 'Nothing was entered. You never know what happens later!'
+    sleep 3
     else
     return $SUCCESS
     fi
@@ -1050,21 +1024,14 @@ print_partitions()
   \n" "$BOOT_PART" "$BOOT_FS_TYPE" \
       "$ROOT_PART" "$ROOT_FS_TYPE" \
       "$SWAP_PART"
-    wprintf '[?] Partition table correct [y], Enter [R] to redo the partitioning: '
+    wprintf '[?] Partition table correct [y] '
     read -r i
     if [ "$i" = 'y' ] || [ "$i" = 'Y' ]
     then
-      break
-    elif [ "$i" = 'r' ] || [ "$i" = 'R' ]
-    then
-    sleep_clear 1
-    partitionsetup
-    else
-    clear
-      continue
+    break
     fi
   done
-
+  sleep_clear 1
   return $SUCCESS
 }
 
@@ -1429,13 +1396,7 @@ setup_initramfs()
   cp -f "$BI_PATH/data/etc/mkinitcpio.conf" "$CHROOT/etc/mkinitcpio.conf"
   cp -fr "$BI_PATH/data/etc/mkinitcpio.d" "$CHROOT/etc/"
 
-  if [ "$INSTALL_MODE" = "$INSTALL_FULL_ISO" ]
-  then
-    cp /run/archiso/bootmnt/blackarch/boot/x86_64/vmlinuz-linux \
-      "$CHROOT/boot/vmlinuz-linux"
-  fi
-
-# terminus font
+ # terminus font
  if [ "$TERMINUS" = "FALSE" ]
  then
  printf "\n\n[INFO] Terminus font is disabled. Skip..."
@@ -1510,7 +1471,7 @@ setup_bootloader()
     if [ $LUKS = $TRUE ]
     then
       cat >> "$CHROOT/boot/loader/entries/arch.conf" << EOF
-title   BlackArch Linux
+title   $OSNAME
 linux   /vmlinuz-linux
 initrd    /initramfs-linux.img
 options   cryptdevice=UUID=$uuid:$CRYPT_ROOT root=/dev/mapper/$CRYPT_ROOT rw
@@ -1518,7 +1479,7 @@ EOF
 
     else
       cat >> "$CHROOT/boot/loader/entries/arch.conf" << EOF
-title   BlackArch Linux
+title   $OSNAME
 linux   /vmlinuz-linux
 initrd    /initramfs-linux.img
 options   root=UUID=$uuid rw
@@ -1545,9 +1506,13 @@ EOF
       sed -i "s|quiet|cryptdevice=UUID=$uuid:$CRYPT_ROOT root=/dev/mapper/$CRYPT_ROOT quiet|" \
         "$CHROOT/etc/default/grub"
     fi
+
+   if [ "$BLACKARCH" = "TRUE" ]
+   then
     sed -i 's/Arch/BlackArch/g' "$CHROOT/etc/default/grub"
     echo "GRUB_BACKGROUND=\"/boot/grub/splash.png\"" >> \
       "$CHROOT/etc/default/grub"
+   fi
 
     sed -i 's/#GRUB_COLOR_/GRUB_COLOR_/g' "$CHROOT/etc/default/grub"
     sed -i "s/#GRUB_DISABLE_OS_PROBER/GRUB_DISABLE_OS_PROBER/g" "/mnt/etc/default/grub"
@@ -1557,7 +1522,10 @@ EOF
     printf "[+] Running grub-install\n\n"
     chroot $CHROOT grub-install --target=i386-pc "$HD_DEV" > $VERBOSE 2>&1
 
+    if [ "$BLACKARCH" = "TRUE" ]
+    then
     cp -f "$BI_PATH/data/boot/grub/splash.png" "$CHROOT/boot/grub/splash.png"
+    fi
 
     printf "\n[+] Looking for other operating systems \n\n"
     chroot /mnt os-prober
@@ -1726,26 +1694,6 @@ setup_extra_packages()
 # perform system base setup/configurations
 setup_base_system()
 {
-  if [ "$INSTALL_MODE" = "$INSTALL_FULL_ISO" ]
-  then
-    dump_full_iso
-    sleep_clear 1
-  fi
-
-  if [ "$INSTALL_MODE" != "$INSTALL_FULL_ISO" ]
-  then
-    pass_mirror_conf # copy mirror list to chroot env
-
-    setup_resolvconf
-    sleep_clear 1
-
-    install_base_packages
-    sleep_clear 1
-
-    setup_resolvconf
-    sleep_clear 1
-  fi
-
   setup_fstab
   sleep_clear 1
 
@@ -1757,7 +1705,23 @@ setup_base_system()
 
   setup_initramfs
   sleep_clear 1
+  
+  if [ -z "$HOST_NAME" ]
+  then
+  setup_user "root"
+  sleep_clear 1
 
+  ask_user_account
+  sleep_clear 1
+
+  setup_user "$NORMAL_USER"
+  sleep_clear 1
+
+  HOST_NAME="$NOMAL_USER"
+
+  setup_hostname
+  sleep_clear 1
+  else
   setup_hostname
   sleep_clear 1
 
@@ -1769,6 +1733,8 @@ setup_base_system()
 
   setup_user "$NORMAL_USER"
   sleep_clear 1
+  fi
+
 
   reinitialize_keyring
   sleep_clear 1
@@ -1789,7 +1755,7 @@ setup_base_system()
 # enable systemd-networkd services
 enable_iwd_networkd()
 {
-  title 'BlackArch Linux Setup > Network'
+  title '$OSNAME Setup > Network'
 
   wprintf '[+] Enabling Iwd and Networkd'
   printf "\n\n"
@@ -1803,14 +1769,18 @@ enable_iwd_networkd()
 # update /etc files and set up iptables
 update_etc()
 {
-  title 'BlackArch Linux Setup > Etc files'
+  title '$OSNAME Setup > Etc files'
 
   wprintf '[+] Updating /etc files'
   printf "\n\n"
 
   # /etc/*
-  cp -r "$BI_PATH/data/etc/"{arch-release,issue,motd,\
-os-release,sysctl.d,systemd} "$CHROOT/etc/." > $VERBOSE 2>&1
+  if [ "$BLACKARCH" = "TRUE" ]
+  then
+  cp -r "$BI_PATH/data/etc/"{arch-release,issue,motd,os-release,sysctl.d,systemd} "$CHROOT/etc/."
+  else
+  cp -r "$BI_PATH/data/etc/"{sysctl.d,systemd} "$CHROOT/etc/."
+  fi
 
   return $SUCCESS
 }
@@ -1818,7 +1788,7 @@ os-release,sysctl.d,systemd} "$CHROOT/etc/." > $VERBOSE 2>&1
 # setting up fcitx5
 setup_im()
 {
-  title 'BlackArch Linux Setup > Input Methot Setup'
+  title '$OSNAME Setup > Input Methot Setup'
   wprintf '[+] Adding fcitx5 to environment variables...'
   cp "/etc/environment" "/mnt/etc"
   chroot $CHROOT sed -i '5a GTK_IM_MODULE=fcitx5' "/etc/environment"
@@ -1834,7 +1804,7 @@ setup_im()
 # ask for blackarch linux mirror
 ask_mirror()
 {
-  title 'BlackArch Linux Setup > BlackArch Mirror'
+  title '$OSNAME Setup > BlackArch Mirror'
 
   local IFS='|'
   count=1
@@ -1912,7 +1882,7 @@ run_strap_sh()
   strap_sh='/tmp/strap.sh'
   orig_sha1="$(curl -s https://blackarch.org/checksums/strap | awk '{print $1}')"
 
-  title 'BlackArch Linux Setup > Strap'
+  title '$OSNAME > Strap'
 
   wprintf '[+] Downloading and executing strap.sh'
   printf "\n\n"
@@ -1998,7 +1968,7 @@ ask_de_setup()
 # ask user for X (display + window manager) setup
 ask_x_setup()
 {
-  if confirm 'BlackArch Linux Setup > X11' '[?] Setup X11 + window managers [y/n]: '
+  if confirm '$OSNAME Setup > X11' '[?] Setup X11 + window managers [y/n]: '
   then
     X_SETUP=$TRUE
     printf "\n"
@@ -2011,9 +1981,9 @@ ask_x_setup()
 # select desktop environmrnt
 select_de()
 {
-	title 'BlackArch Linux Setup > Desktop Environment'
+	title '$OSNAME Setup > Desktop Environment'
 
-	wprintf '[?] Please select Desktop environment'
+	wprintf '[?] Select Desktop environment'
 	printf "\n\n"
 	printf "
  1. KDE Plasma
@@ -2110,18 +2080,19 @@ select_de()
 # install desktop environment
 install_de()
 {
-	title 'BlackArch Linux Setup > Desktop Environment'
+	title '$OSNAME > Desktop Environment'
 	wprintf '[+] Installing Desktop Environment'
 	printf "\n\n"
 
 	chroot $CHROOT pacman -S $DE_MAIN $DE_EXTPKG $DE_MAN --disable-download-timeout --needed --noconfirm
 
-	      printf "\n\n"
-        wprintf '[+] Enabling Display Manager'
-        printf "\n\n"
+	printf "\n\n"
+  wprintf '[+] Enabling Display Manager'
+  printf "\n\n"
 	chroot $CHROOT systemctl enable $DE_MAN
 	sleep 1
-	printf "\n\n"
+	
+  printf "\n\n"
 	printf ">>> BE THE SHINING STAR!! <<<"
 	sleep 3
 
@@ -2131,7 +2102,7 @@ install_de()
 # setup display manager
 setup_display_manager()
 {
-  title 'BlackArch Linux Setup > Display Manager'
+  title '$OSNAME Setup > Display Manager'
 
   wprintf '[+] Setting up LXDM'
   printf "\n\n"
@@ -2141,12 +2112,15 @@ setup_display_manager()
     > $VERBOSE 2>&1
 
   # config files
+  if [ "$BLACKARCH" = "TRUE" ]
+  then
   cp -r "$BI_PATH/data/etc/X11" "$CHROOT/etc/."
   cp -r "$BI_PATH/data/etc/xprofile" "$CHROOT/etc/."
   cp -r "$BI_PATH/data/etc/lxdm/." "$CHROOT/etc/lxdm/."
   cp -r "$BI_PATH/data/usr/share/lxdm/." "$CHROOT/usr/share/lxdm/."
   cp -r "$BI_PATH/data/usr/share/gtk-2.0/." "$CHROOT/usr/share/gtk-2.0/."
   mkdir -p "$CHROOT/usr/share/xsessions"
+  fi
 
   # enable in systemd
   chroot $CHROOT systemctl enable lxdm > $VERBOSE 2>&1
@@ -2158,11 +2132,13 @@ setup_display_manager()
 # setup window managers
 setup_window_managers()
 {
-  title 'BlackArch Linux Setup > Window Managers'
+  title '$OSNAME Setup > Window Managers'
 
   wprintf '[+] Setting up window managers'
   printf "\n\n"
 
+  if [ "$BLACKARCH" = "TRUE" ]
+  then
   while true
   do
 
@@ -2241,13 +2217,17 @@ setup_window_managers()
         ;;
     esac
   done
-
+  
   # wallpaper
   cp -r "$BI_PATH/data/usr/share/blackarch" "$CHROOT/usr/share/blackarch"
 
   # remove wrong xsession entries
   chroot $CHROOT rm /usr/share/xsessions/openbox-kde.desktop > $VERBOSE 2>&1
   chroot $CHROOT rm /usr/share/xsessions/i3-with-shmlog.desktop > $VERBOSE 2>&1
+
+  else
+  chroot $CHROOT pacman -S fluxbox openbox --needed --overwrite='*' --noconfirm
+  fi
 
   return $SUCCESS
 }
@@ -2256,7 +2236,7 @@ setup_window_managers()
 # ask user for VirtualBox modules+utils setup
 ask_vbox_setup()
 {
-  if confirm 'BlackArch Linux Setup > VirtualBox' '[?] Setup VirtualBox modules [y/n]: '
+  if confirm '$OSNAME > VirtualBox' '[?] Setup VirtualBox modules [y/n]: '
   then
     VBOX_SETUP=$TRUE
   fi
@@ -2268,7 +2248,7 @@ ask_vbox_setup()
 # setup virtualbox utils
 setup_vbox_utils()
 {
-  title 'BlackArch Linux Setup > VirtualBox'
+  title '$OSNAME Setup > VirtualBox'
 
   wprintf '[+] Setting up VirtualBox utils'
   printf "\n\n"
@@ -2291,7 +2271,7 @@ setup_vbox_utils()
 # ask user for VirtualBox modules+utils setup
 ask_vmware_setup()
 {
-  if confirm 'BlackArch Linux Setup > VMware' '[?] Setup VMware modules [y/n]: '
+  if confirm '$OSNAME Setup > VMware' '[?] Setup VMware modules [y/n]: '
   then
     VMWARE_SETUP=$TRUE
   fi
@@ -2303,7 +2283,7 @@ ask_vmware_setup()
 # setup vmware utils
 setup_vmware_utils()
 {
-  title 'BlackArch Linux Setup > VMware'
+  title '$OSNAME Setup > VMware'
 
   wprintf '[+] Setting up VMware utils'
   printf "\n\n"
@@ -2322,7 +2302,7 @@ setup_vmware_utils()
 # ask user for BlackArch tools setup
 ask_ba_tools_setup()
 {
-  if confirm 'BlackArch Linux Setup > Tools' '[?] Setup BlackArch Linux tools [y/n]: '
+  if confirm '$OSNAME Setup > Tools' '[?] Setup BlackArch Linux tools [y/n]: '
   then
     BA_TOOLS_SETUP=$TRUE
   fi
@@ -2333,7 +2313,7 @@ ask_ba_tools_setup()
 # setup blackarch tools from repository
 setup_blackarch_tools()
 {
-  title 'BlackArch Linux Setup > Tools'
+  title '$OSNAME Setup > Tools'
 
   wprintf '[+] Installing BlackArch Linux packages (grab a coffee)'
   printf "\n\n"
@@ -2364,64 +2344,12 @@ update_user_groups()
   echo "$user ALL=(ALL:ALL) ALL" >> $CHROOT/etc/sudoers > $VERBOSE 2>&1
   echo "root ALL=(ALL:ALL) ALL" >> $CHROOT/etc/sudoers
 
-
-  return $SUCCESS
-}
-
-
-# dump data from the full-iso
-dump_full_iso()
-{
-  full_dirs='/bin /sbin /etc /home /lib /lib64 /opt /root /srv /usr /var /tmp'
-  total_size=0 # no cheat
-
-  title 'BlackArch Linux Setup'
-
-  wprintf '[+] Dumping data from Full-ISO. Grab a coffee and pop shells!'
-  printf "\n\n"
-
-  wprintf '[+] Fetching total size to transfer, please wait...'
-  printf "\n"
-
-  for d in $full_dirs
-  do
-    part_size=$(du -sm "$d" 2> /dev/null | awk '{print $1}')
-    ((total_size+=part_size))
-    printf "
-  > $d $part_size MB"
-  done
-  printf "\n
-  [ Total size = $total_size MB ]
-  \n\n"
-
-  check_space
-
-  wprintf '[+] Installing the backdoors to /'
-  printf "\n\n"
-  warn 'This can take a while, please wait...'
-  printf "\n"
-  rsync -aWx --human-readable --info=progress2 / $CHROOT > $VERBOSE 2>&1
-  wprintf "[+] Installation done!\n"
-
-  # clean up files
-  wprintf '[+] Cleaning Full Environment files, please wait...'
-  sed -i 's/Storage=volatile/#Storage=auto/' ${CHROOT}/etc/systemd/journald.conf
-  rm -rf "$CHROOT/etc/udev/rules.d/81-dhcpcd.rules"
-  rm -rf "$CHROOT/etc/systemd/system/"{choose-mirror.service,pacman-init.service,etc-pacman.d-gnupg.mount,getty@tty1.service.d}
-  rm -rf "$CHROOT/etc/systemd/scripts/choose-mirror"
-  rm -rf "$CHROOT/etc/systemd/system/getty@tty1.service.d/autologin.conf"
-  rm -rf "$CHROOT/root/"{.automated_script.sh,.zlogin}
-  rm -rf "$CHROOT/etc/mkinitcpio-archiso.conf"
-  rm -rf "$CHROOT/etc/initcpio"
-  #rm -rf ${CHROOT}/etc/{group*,passwd*,shadow*,gshadow*}
-  wprintf "done\n"
-
   return $SUCCESS
 }
 
 rm_collision_pak()
 {
-  title "BlackArch Linux Setup > Remove duplicate packages"
+  title "$OSNAME Setup > Remove duplicate packages"
   wprintf "[+] Removing gnu-netcat and rpmextract"
   printf "\n\n"
 
@@ -2462,7 +2390,7 @@ fix_osname()
 # https://youtu.be/29VbPzcawv8
 
 # setup blackarch related stuff
-setup_blackarch()
+setup_extrasystem()
 {
   rm_collision_pak
   sleep_clear 1
@@ -2547,9 +2475,12 @@ setup_blackarch()
     setup_blackarch_tools
     sleep_clear 1
   fi
-    
+
+  if [ "$BLACKARCH" = "TRUE" ]
+  then
     fix_osname
     sleep_clear 1
+  fi
 
   if [ -n "$NORMAL_USER" ]
   then
@@ -2567,8 +2498,13 @@ easter_backdoor()
   bar=0
 
   title 'Game Over'
-
+  if [ "$BLACKARCH" = "TRUE" ]
+  then
   wprintf '[+] BlackArch Linux installation successfull!'
+  else
+  wprintf '[+] Arch Linux installation successfull!'
+  fi
+
   printf "\n\n"
 
   wprintf 'Yo n00b, b4ckd00r1ng y0ur sy5t3m n0w '
@@ -2630,11 +2566,6 @@ main()
   check_uid
   check_env
   check_boot_mode
-  check_iso_type
-
-  # install mode
-  ask_install_mode
-  sleep_clear 0
 
   # locale
   set_locale
@@ -2648,8 +2579,6 @@ main()
   ask_hostname
   sleep_clear 0
 
-  if [ "$INSTALL_MODE" != "$INSTALL_FULL_ISO" ]
-  then
     get_net_ifs
     ask_net_conf_mode
     if [ "$NET_CONF_MODE" != "$NET_CONF_SKIP" ]
@@ -2692,8 +2621,6 @@ main()
     sleep_clear 1
     update_pacman
 
-  fi
-
   # hard drive
   partitionsetup()
   {
@@ -2728,11 +2655,9 @@ main()
   sleep_clear 1
 
   # blackarch Linux
-  
-  setup_blackarch
+  setup_extrasystem
   sleep_clear 1
   
-
   # epilog
   disable_sign_check2
   sleep_clear 1

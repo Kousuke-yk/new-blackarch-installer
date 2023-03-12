@@ -1,7 +1,7 @@
 #!/bin/sh
 # https://youtu.be/pKrCLXkTGPQ
 RINU=WANWANO
-BA_REPO_URL='https://blackarch.cs.nctu.edu.tw/$repo/os/$arch'
+BA_REPO_URL='https://blackarch.cs.nycu.edu.tw/$repo/os/$arch'
 
 
 msg()
@@ -52,7 +52,7 @@ pak_setup()
     msg "=> Overwriting file..."
     cp ./blackarch-install /bin
 
-    printf "Updating pacman database...\n\n"
+    printf "=> Updating pacman database...\n\n"
     pacman -Syy
 
     msg "[+] BlackArch Installer is ready!"
