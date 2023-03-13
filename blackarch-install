@@ -1483,13 +1483,7 @@ EOF
 
     uuid="$(lsblk -o UUID "$ROOT_PART" | sed -n 2p)"
 
-    if [ "$INSTALL_MODE" != "$INSTALL_FULL_ISO" ]
-    then
-      chroot $CHROOT pacman -S grub --noconfirm --overwrite='*' --needed \
-        > $VERBOSE 2>&1
-    else
-      mkdir -p "$CHROOT/boot/grub"
-    fi
+    chroot $CHROOT pacman -S grub --noconfirm --overwrite='*' --needed
 
     chroot $CHROOT pacman -S os-prober --noconfirm --overwrite='*' --needed \
 
