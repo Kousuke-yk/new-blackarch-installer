@@ -12,7 +12,7 @@
 ################################################################################
 
 # blackarch-installer version
-VERSION="6.0"
+VERSION="6.1"
 
 # path to blackarch-installer
 BI_PATH='/usr/share/blackarch-installer'
@@ -325,7 +325,7 @@ check_uid()
 set_ostype()
 {
   title 'Environment > OS Type (BlackArch? Arch Linux?)'
-  wprintf '[+] Select OS'
+  wprintf '[+] Select the OS you wish to install'
   printf "\n
   1. BlackArch Linux
   2. Arch Linux
@@ -1686,6 +1686,17 @@ setup_extra_packages()
 # perform system base setup/configurations
 setup_base_system()
 {
+  pass_mirror_conf # copy mirror list to chroot env
+
+  setup_resolvconf
+  sleep_clear 1
+
+  install_base_packages
+  sleep_clear 1
+
+  setup_resolvconf
+  sleep_clear 1
+  
   setup_fstab
   sleep_clear 1
 
@@ -1709,7 +1720,7 @@ setup_base_system()
   setup_user "$NORMAL_USER"
   sleep_clear 1
 
-  HOST_NAME="$NOMAL_USER"
+  HOST_NAME="$NORMAL_USER"
 
   setup_hostname
   sleep_clear 1
@@ -1726,7 +1737,6 @@ setup_base_system()
   setup_user "$NORMAL_USER"
   sleep_clear 1
   fi
-
 
   reinitialize_keyring
   sleep_clear 1
