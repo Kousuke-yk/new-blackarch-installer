@@ -1751,7 +1751,7 @@ setup_base_system()
 # enable systemd-networkd services
 enable_iwd_networkd()
 {
-  title '$OSNAME Setup > Network'
+  title "$OSNAME Setup > Network"
 
   wprintf '[+] Enabling Iwd and Networkd'
   printf "\n\n"
@@ -1765,7 +1765,7 @@ enable_iwd_networkd()
 # update /etc files and set up iptables
 update_etc()
 {
-  title '$OSNAME Setup > Etc files'
+  title "$OSNAME Setup > Etc files"
 
   wprintf '[+] Updating /etc files'
   printf "\n\n"
@@ -1784,7 +1784,7 @@ update_etc()
 # setting up fcitx5
 setup_im()
 {
-  title '$OSNAME Setup > Input Methot Setup'
+  title "$OSNAME Setup > Input Methot Setup"
   wprintf '[+] Adding fcitx5 to environment variables...'
   cp "/etc/environment" "/mnt/etc"
   chroot $CHROOT sed -i '5a GTK_IM_MODULE=fcitx5' "/etc/environment"
@@ -1800,7 +1800,7 @@ setup_im()
 # ask for blackarch linux mirror
 ask_mirror()
 {
-  title '$OSNAME Setup > BlackArch Mirror'
+  title "$OSNAME Setup > BlackArch Mirror"
 
   local IFS='|'
   count=1
@@ -1878,7 +1878,7 @@ run_strap_sh()
   strap_sh='/tmp/strap.sh'
   orig_sha1="$(curl -s https://blackarch.org/checksums/strap | awk '{print $1}')"
 
-  title '$OSNAME > Strap'
+  title "$OSNAME > Strap"
 
   wprintf '[+] Downloading and executing strap.sh'
   printf "\n\n"
@@ -1950,7 +1950,7 @@ else
 ask_de_setup()
 {
 	DE_SETUP='DISABLED'
-	if confirm 'BlackArch Linux Setup > Desktop Environment' '[?] Setup Desktop Environments [y/n]: '
+	if confirm "$OSNAME > Desktop Environment" '[?] Setup Desktop Environments [y/n]: '
 	then
 		DE_SETUP='ENABLED'
 		printf "\n\n Root: Black and white, just like Othello!"
@@ -1964,7 +1964,7 @@ ask_de_setup()
 # ask user for X (display + window manager) setup
 ask_x_setup()
 {
-  if confirm '$OSNAME Setup > X11' '[?] Setup X11 + window managers [y/n]: '
+  if confirm "$OSNAME Setup > X11" '[?] Setup X11 + window managers [y/n]: '
   then
     X_SETUP=$TRUE
     printf "\n"
@@ -1977,7 +1977,7 @@ ask_x_setup()
 # select desktop environmrnt
 select_de()
 {
-	title '$OSNAME Setup > Desktop Environment'
+	title "$OSNAME Setup > Desktop Environment"
 
 	wprintf '[?] Select Desktop environment'
 	printf "\n\n"
@@ -2076,7 +2076,7 @@ select_de()
 # install desktop environment
 install_de()
 {
-	title '$OSNAME > Desktop Environment'
+	title "$OSNAME > Desktop Environment"
 	wprintf '[+] Installing Desktop Environment'
 	printf "\n\n"
 
@@ -2098,7 +2098,7 @@ install_de()
 # setup display manager
 setup_display_manager()
 {
-  title '$OSNAME Setup > Display Manager'
+  title "$OSNAME Setup > Display Manager"
 
   wprintf '[+] Setting up LXDM'
   printf "\n\n"
@@ -2128,7 +2128,7 @@ setup_display_manager()
 # setup window managers
 setup_window_managers()
 {
-  title '$OSNAME Setup > Window Managers'
+  title "$OSNAME Setup > Window Managers"
 
   wprintf '[+] Setting up window managers'
   printf "\n\n"
@@ -2232,7 +2232,7 @@ setup_window_managers()
 # ask user for VirtualBox modules+utils setup
 ask_vbox_setup()
 {
-  if confirm '$OSNAME > VirtualBox' '[?] Setup VirtualBox modules [y/n]: '
+  if confirm "$OSNAME > VirtualBox" '[?] Setup VirtualBox modules [y/n]: '
   then
     VBOX_SETUP=$TRUE
   fi
@@ -2244,7 +2244,7 @@ ask_vbox_setup()
 # setup virtualbox utils
 setup_vbox_utils()
 {
-  title '$OSNAME Setup > VirtualBox'
+  title "$OSNAME Setup > VirtualBox"
 
   wprintf '[+] Setting up VirtualBox utils'
   printf "\n\n"
@@ -2267,7 +2267,7 @@ setup_vbox_utils()
 # ask user for VirtualBox modules+utils setup
 ask_vmware_setup()
 {
-  if confirm '$OSNAME Setup > VMware' '[?] Setup VMware modules [y/n]: '
+  if confirm "$OSNAME Setup > VMware" '[?] Setup VMware modules [y/n]: '
   then
     VMWARE_SETUP=$TRUE
   fi
@@ -2279,7 +2279,7 @@ ask_vmware_setup()
 # setup vmware utils
 setup_vmware_utils()
 {
-  title '$OSNAME Setup > VMware'
+  title "$OSNAME Setup > VMware"
 
   wprintf '[+] Setting up VMware utils'
   printf "\n\n"
@@ -2298,7 +2298,7 @@ setup_vmware_utils()
 # ask user for BlackArch tools setup
 ask_ba_tools_setup()
 {
-  if confirm '$OSNAME Setup > Tools' '[?] Setup BlackArch Linux tools [y/n]: '
+  if confirm "$OSNAME Setup > Tools" '[?] Setup BlackArch Linux tools [y/n]: '
   then
     BA_TOOLS_SETUP=$TRUE
   fi
@@ -2309,7 +2309,7 @@ ask_ba_tools_setup()
 # setup blackarch tools from repository
 setup_blackarch_tools()
 {
-  title '$OSNAME Setup > Tools'
+  title "$OSNAME Setup > Tools"
 
   wprintf '[+] Installing BlackArch Linux packages (grab a coffee)'
   printf "\n\n"
@@ -2325,7 +2325,7 @@ setup_blackarch_tools()
 # add user to newly created groups
 update_user_groups()
 {
-  title '$OSNAME Setup > User'
+  title "$OSNAME Setup > User"
 
   wprintf "[+] Adding user $user to groups and sudoers"
   printf "\n\n"
@@ -2494,12 +2494,7 @@ easter_backdoor()
   bar=0
 
   title 'Game Over'
-  if [ "$BLACKARCH" = "TRUE" ]
-  then
-  wprintf '[+] BlackArch Linux installation successfull!'
-  else
-  wprintf '[+] Arch Linux installation successfull!'
-  fi
+wprintf "[+] $OSNAME installation successfull!"
 
   printf "\n\n"
 
