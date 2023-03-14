@@ -756,11 +756,13 @@ check_inet_conn()
   title 'Network Setup > Connection Check'
   wprintf '[+] Checking for Internet connection...'
 
-  if ! curl -s https://strawberryprince.com/ > $VERBOSE
+  if ! curl -s https://raw.githubusercontent.com/Kousuke-yk/new-blackarch-installer/main/file/rinu/rinuaa3.txt > /dev/null 
   then
     err 'No Internet connection! Check your network (settings).'
     exit $FAILURE
   fi
+
+  sleep 2.3
 
 }
 
@@ -1827,9 +1829,11 @@ ask_mirror()
 ask_mirror_arch()
 {
   local mirrold='cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.backup'
-  title 'Pacman Setup > Reflector'
-  wprintf '[+] Running Reflector'
-    printf "\n\n"
+  title 'Pacman Setup > ArchLinux Mirrorlist'
+    wprintf '[+] Setting up mirror'
+    if [ "$REFLECTOR" = "TRUE" ]
+    then
+    printf "\n"
     warn 'This may take time depending on your connection'
     printf "\n"
     $mirrold
@@ -1838,7 +1842,18 @@ ask_mirror_arch()
     yes | pacman -Scc > $VERBOSE 2>&1
     reflector --verbose --latest 5 --protocol https --sort rate \
       --save /etc/pacman.d/mirrorlist > $VERBOSE 2>&1
+  else
+    printf "\n"
+    warn 'I use a Japanese server. Use export REFLECTOR=TRUE to use Reflector.'
+    $mirrold
+    echo -e "## Arch Linux repository Worldwide mirrorlist\n\n" \
+      > /etc/pacman.d/mirrorlist
 
+    for wore in $AR_REPO_URL
+    do
+      echo "Server = $wore" >> /etc/pacman.d/mirrorlist
+    done
+  fi
     return $SUCCESS
 
 }
