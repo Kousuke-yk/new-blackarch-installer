@@ -3,6 +3,11 @@
 RINU=WANWANO
 BA_REPO_URL='https://blackarch.cs.nycu.edu.tw/$repo/os/$arch'
 
+if [ "$1" = '-RINU' ]
+then
+RINU=TRUE
+fi
+
 
 msg()
 {
@@ -57,6 +62,12 @@ pak_setup()
 
     msg "[+] BlackArch Installer is ready!"
 
+    if [ "$RINU" = "TRUE" ]
+    then
+    wget https://raw.githubusercontent.com/Kousuke-yk/new-blackarch-installer/main/file/rinu/rinuaa3.txt > /dev/null 
+    cat ./rinuaa3.txt
+    rm ./rinuaa3.txt
+    fi
 }
 
 

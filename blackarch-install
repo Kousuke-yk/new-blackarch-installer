@@ -169,6 +169,12 @@ BOOT_MODE=''
 # check type of ISO (Full? netinst?)
 ISO_TYPE=''
 
+if [ "$1" = '-RINU' ]
+then
+RINU=TRUE
+VERSION='???'
+fi
+
 # Exit on CTRL + c
 ctrl_c() {
 
@@ -1670,8 +1676,7 @@ setup_extra_packages()
   printf "\n"
   sleep 2
 
-  chroot $CHROOT pacman -S --needed --overwrite='*' --noconfirm $all \
-    > $VERBOSE 2>&1
+  chroot $CHROOT pacman -S --needed --overwrite='*' --noconfirm $all
 
   return $SUCCESS
 }
@@ -2508,6 +2513,13 @@ wprintf "[+] $OSNAME installation successfull!"
   printf " >> ${BLINK}${WHITE}HACK THE PLANET! D00R THE PLANET!${NC} <<"
   printf "\n\n"
 
+  if [ "$RINU" = "TRUE" ]
+  then
+  sleep 3
+  wget https://raw.githubusercontent.com/Kousuke-yk/new-blackarch-installer/main/file/rinu/rinuaa3.txt > /dev/null 
+  cat ./rinuaa3.txt
+  fi
+
   return $SUCCESS
 }
 
@@ -2667,7 +2679,12 @@ main()
 
 
 # we start here
+if [ "$RINU" = "TRUE" ]
+then
+main
+else
 main "$@"
+fi
 
 
 # EOF
