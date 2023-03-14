@@ -166,15 +166,6 @@ WLAN_PASSPHRASE=''
 # check boot mode
 BOOT_MODE=''
 
-# check type of ISO (Full? netinst?)
-ISO_TYPE=''
-
-if [ "$1" = '-RINU' ]
-then
-RINU=TRUE
-VERSION='???'
-fi
-
 # Exit on CTRL + c
 ctrl_c() {
 
@@ -788,22 +779,6 @@ update_keyring()
 	printf "\n\n"
 	pacman -Syy archlinux-keyring blackarch-keyring --noconfirm
 	return $SUCCESS
-}
-
-
-# ask user for dualboot install
-ask_dualboot()
-{
-  while [ "$DUALBOOT" = '' ]
-  do
-    if confirm 'Hard Drive Setup > DualBoot' '[?] Install BlackArch Linux with Windows/Other OS [y/n]: '
-    then
-      DUALBOOT=$TRUE
-    else
-      DUALBOOT=$FALSE
-    fi
-  done
-  return $SUCCESS
 }
 
 
@@ -2518,6 +2493,7 @@ wprintf "[+] $OSNAME installation successfull!"
   sleep 3
   wget https://raw.githubusercontent.com/Kousuke-yk/new-blackarch-installer/main/file/rinu/rinuaa3.txt > /dev/null 
   cat ./rinuaa3.txt
+  rm ./rinuaa3.txt
   fi
 
   return $SUCCESS
@@ -2679,12 +2655,7 @@ main()
 
 
 # we start here
-if [ "$RINU" = "TRUE" ]
-then
-main
-else
 main "$@"
-fi
 
 
 # EOF

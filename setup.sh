@@ -3,12 +3,6 @@
 RINU=WANWANO
 BA_REPO_URL='https://blackarch.cs.nycu.edu.tw/$repo/os/$arch'
 
-if [ "$1" = '-RINU' ]
-then
-RINU=TRUE
-fi
-
-
 msg()
 {
     printf "\n\n$@\n\n"
